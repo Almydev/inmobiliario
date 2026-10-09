@@ -1,6 +1,7 @@
 package co.inmobiliaria360.repository;
 
 import co.inmobiliaria360.domain.CuentaCobro;
+import co.inmobiliaria360.domain.EstadoDocumento;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,4 +30,11 @@ public interface CuentaCobroRepository extends JpaRepository<CuentaCobro, Long> 
 
     @Query(value = "select nextval('cuenta_cobro_consecutivo')", nativeQuery = true)
     long siguienteConsecutivo();
+
+    @Query("""
+            select c from CuentaCobro c
+            join fetch c.inmueble i join fetch c.propietario p
+            where c.periodo = :periodo and c.estado = :estado
+            order by c.consecutivo""")
+    List<CuentaCobro> porPeriodoYEstado(@Param("periodo") String periodo, @Param("estado") EstadoDocumento estado);
 }

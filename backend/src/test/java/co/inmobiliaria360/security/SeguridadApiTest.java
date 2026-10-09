@@ -13,11 +13,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import co.inmobiliaria360.domain.Rol;
 import co.inmobiliaria360.domain.Usuario;
+import co.inmobiliaria360.repository.ComprobanteEgresoRepository;
 import co.inmobiliaria360.repository.CuentaCobroRepository;
 import co.inmobiliaria360.repository.UsuarioRepository;
+import co.inmobiliaria360.service.ComprobanteEgresoService;
 import co.inmobiliaria360.service.CuentaCobroService;
 import co.inmobiliaria360.web.ApiExceptionHandler;
 import co.inmobiliaria360.web.AuthController;
+import co.inmobiliaria360.web.ComprobanteEgresoController;
 import co.inmobiliaria360.web.CuentaCobroController;
 import co.inmobiliaria360.web.UsuarioController;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
@@ -45,7 +48,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Pruebas de seguridad de la API: autenticacion, autorizacion, tokens manipulados, validacion de entradas, CORS y fuerza bruta. */
-@WebMvcTest(controllers = {AuthController.class, UsuarioController.class, CuentaCobroController.class})
+@WebMvcTest(controllers = {AuthController.class, UsuarioController.class, CuentaCobroController.class, ComprobanteEgresoController.class})
 @Import({SecurityConfig.class, JwtService.class, LoginThrottle.class, ApiExceptionHandler.class})
 @TestPropertySource(properties = {
         "app.jwt.secret=0123456789abcdef0123456789abcdef",
@@ -61,6 +64,8 @@ class SeguridadApiTest {
     @MockitoBean UsuarioRepository usuarios;
     @MockitoBean CuentaCobroService cuentaService;
     @MockitoBean CuentaCobroRepository cuentaRepo;
+    @MockitoBean ComprobanteEgresoService egresoService;
+    @MockitoBean ComprobanteEgresoRepository egresoRepo;
 
     private String token(Rol rol) {
         var u = new Usuario();
@@ -82,6 +87,20 @@ class SeguridadApiTest {
         mvc.perform(get("/api/cuentas-cobro")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/auth/me")).andExpect(status().isUnauthorized());
         mvc.perform(post("/api/cuentas-cobro/1/enviar")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void comprobantesDeEgresoRequierenTokenYValidanEntradas() throws Exception {
+        mvc.perform(get("/api/comprobantes-egreso")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/comprobantes-egreso/1/pagar")).andExpect(status().isUnauthorized());
+        String auth = bearer(token(Rol.OPERADOR));
+        mvc.perform(post("/api/comprobantes-egreso").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"inmuebleId\":1,\"periodo\":\"2026-10\",\"dias\":99}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/comprobantes-egreso").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"inmuebleId\":1,\"periodo\":\"2026-10\",\"otrosDescuentos\":-5}"))
+                .andExpect(status().isBadRequest());
+        verify(egresoService, never()).generar(any(), any(), org.mockito.ArgumentMatchers.anyInt(), any(), any(), any());
     }
 
     @Test
