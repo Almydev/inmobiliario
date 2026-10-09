@@ -5,6 +5,7 @@ const ENLACES = [
   { a: '/', texto: 'Inicio', fin: true },
   { a: '/propietarios', texto: 'Propietarios' },
   { a: '/inquilinos', texto: 'Inquilinos' },
+  { a: '/inmuebles', texto: 'Inmuebles' },
 ]
 
 export default function Layout() {

@@ -4,6 +4,7 @@ import { useAuth } from '../auth'
 const ACCESOS = [
   { a: '/propietarios', titulo: 'Propietarios', texto: 'Registra a los dueños y sus datos de pago.' },
   { a: '/inquilinos', titulo: 'Inquilinos', texto: 'Registra a quienes reciben la cuenta de cobro.' },
+  { a: '/inmuebles', titulo: 'Inmuebles', texto: 'Une propietario, inquilino y canon de cada inmueble.' },
 ]
 
 export default function Inicio() {
@@ -12,7 +13,7 @@ export default function Inicio() {
     <div className="mx-auto max-w-6xl animate-rise">
       <h1 className="font-display text-3xl text-brand-900">Bienvenido, {usuario.nombre}</h1>
       <p className="mt-1 text-sm text-brand-700/80">Elige un módulo para empezar.</p>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {ACCESOS.map((x) => (
           <Link
             key={x.a}

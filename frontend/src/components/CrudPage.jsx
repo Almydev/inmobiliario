@@ -4,6 +4,36 @@ import { api } from '../api'
 const input =
   'w-full rounded-xl border border-sand-300 bg-white px-3.5 py-2.5 text-brand-950 outline-none transition focus:border-brand-700 focus:ring-4 focus:ring-brand-700/15'
 
+const moneda = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
+
+function formatear(valor, formato) {
+  if (valor === null || valor === undefined || valor === '') return null
+  if (formato === 'moneda') return moneda.format(valor)
+  if (formato === 'porcentaje') return `${Number(valor)}%`
+  return valor
+}
+
+function Opciones({ campo, valor, onCambio }) {
+  const [opciones, setOpciones] = useState([])
+  useEffect(() => {
+    api(`${campo.fuente}?q=`).then((filas) => setOpciones(filas.filter((f) => f.activo))).catch(() => {})
+  }, [campo.fuente])
+  return (
+    <select
+      id={campo.nombre}
+      required={campo.requerido}
+      value={valor ?? ''}
+      onChange={(e) => onCambio(e.target.value)}
+      className={input}
+    >
+      <option value="">{campo.vacio ?? 'Seleccionar…'}</option>
+      {opciones.map((o) => (
+        <option key={o.id} value={o.id}>{o.nombre} · {o.documento}</option>
+      ))}
+    </select>
+  )
+}
+
 function Formulario({ titulo, campos, inicial, onGuardar, onCerrar }) {
   const [valores, setValores] = useState(inicial)
   const [error, setError] = useState('')
@@ -36,14 +66,20 @@ function Formulario({ titulo, campos, inicial, onGuardar, onCerrar }) {
                 {c.etiqueta}
                 {c.requerido && <span className="text-red-600"> *</span>}
               </label>
-              <input
-                id={c.nombre}
-                type={c.tipo ?? 'text'}
-                required={c.requerido}
-                value={valores[c.nombre] ?? ''}
-                onChange={(e) => setValores({ ...valores, [c.nombre]: e.target.value })}
-                className={input}
-              />
+              {c.tipo === 'select' ? (
+                <Opciones campo={c} valor={valores[c.nombre]} onCambio={(v) => setValores({ ...valores, [c.nombre]: v })} />
+              ) : (
+                <input
+                  id={c.nombre}
+                  type={c.tipo ?? 'text'}
+                  min={c.tipo === 'number' ? 0 : undefined}
+                  step={c.tipo === 'number' ? 'any' : undefined}
+                  required={c.requerido}
+                  value={valores[c.nombre] ?? ''}
+                  onChange={(e) => setValores({ ...valores, [c.nombre]: e.target.value })}
+                  className={input}
+                />
+              )}
             </div>
           ))}
           {'activo' in inicial && (
@@ -86,7 +122,10 @@ function Formulario({ titulo, campos, inicial, onGuardar, onCerrar }) {
  * Pagina CRUD generica: listado con busqueda, crear y editar en un modal.
  * `campos`: [{ nombre, etiqueta, tipo?, requerido?, ancho? }]  `columnas`: [{ nombre, etiqueta }]
  */
-export default function CrudPage({ titulo, singular, descripcion, endpoint, campos, columnas }) {
+export default function CrudPage({
+  titulo, singular, descripcion, endpoint, campos, columnas,
+  busqueda = 'Buscar por nombre o documento…',
+}) {
   const [filas, setFilas] = useState([])
   const [q, setQ] = useState('')
   const [cargando, setCargando] = useState(true)
@@ -111,14 +150,19 @@ export default function CrudPage({ titulo, singular, descripcion, endpoint, camp
 
   async function guardar(valores) {
     const esNuevo = !editando.id
-    await api(esNuevo ? endpoint : `${endpoint}/${editando.id}`, { method: esNuevo ? 'POST' : 'PUT', body: valores })
+    // Los selects y números viajan como número (o null si están vacíos)
+    const body = { ...valores }
+    for (const c of campos) {
+      if (c.tipo === 'select' || c.tipo === 'number') body[c.nombre] = body[c.nombre] === '' || body[c.nombre] == null ? null : Number(body[c.nombre])
+    }
+    await api(esNuevo ? endpoint : `${endpoint}/${editando.id}`, { method: esNuevo ? 'POST' : 'PUT', body })
     setEditando(null)
     cargar()
   }
 
   const inicial = editando?.id
     ? { ...editando }
-    : Object.fromEntries([...campos.map((c) => [c.nombre, '']), ['activo', true]])
+    : Object.fromEntries([...campos.map((c) => [c.nombre, c.porDefecto ?? '']), ['activo', true]])
 
   return (
     <div className="mx-auto max-w-6xl animate-rise">
@@ -137,7 +181,7 @@ export default function CrudPage({ titulo, singular, descripcion, endpoint, camp
 
       <input
         type="search"
-        placeholder="Buscar por nombre o documento…"
+        placeholder={busqueda}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         className={`${input} mt-6 max-w-md`}
@@ -170,7 +214,7 @@ export default function CrudPage({ titulo, singular, descripcion, endpoint, camp
             {filas.map((f) => (
               <tr key={f.id} className="border-t border-sand-100 transition hover:bg-sand-50">
                 {columnas.map((c) => (
-                  <td key={c.nombre} className="px-4 py-3">{f[c.nombre] || <span className="text-brand-700/40">—</span>}</td>
+                  <td key={c.nombre} className="px-4 py-3">{formatear(f[c.nombre], c.formato) ?? <span className="text-brand-700/40">—</span>}</td>
                 ))}
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${f.activo ? 'bg-emerald-50 text-emerald-700' : 'bg-sand-100 text-brand-700'}`}>
