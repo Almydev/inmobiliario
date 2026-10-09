@@ -8,6 +8,7 @@ const ENLACES = [
   { a: '/inmuebles', texto: 'Inmuebles' },
   { a: '/cuentas-cobro', texto: 'Cuentas de cobro' },
   { a: '/comprobantes-egreso', texto: 'Comprobantes de egreso' },
+  { a: '/banco', texto: 'Cuadre de banco' },
 ]
 
 export default function Layout() {
