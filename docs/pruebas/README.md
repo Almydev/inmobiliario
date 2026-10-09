@@ -58,3 +58,13 @@ SEED_DEMO_LIMPIAR=true SERVER_PORT=8099 ./mvnw spring-boot:run  # borrar todo lo
 ```
 
 Detén el proceso al ver `RESUMEN` / `Datos demo cargados`. Lo demo se identifica por el correo `@ejemplo.test` y el prefijo `[DEMO]` en los movimientos manuales. **No activar en producción.**
+
+## Interfaz: responsive, menús y tema (`docs/pruebas/ui`)
+
+Navegador real (Playwright sobre tu Chrome) contra el front compilado y una API simulada: **106 comprobaciones** en 5 tamaños (320, 390, 768, 1024 y 1440 px): sin scroll horizontal en las 9 pantallas, barra superior, menú de usuario (cambiar contraseña, cerrar sesión), menú desplegable en móvil/tablet, cambio de tema y ausencia de errores de JavaScript. Guarda capturas en `ui/capturas/`.
+
+```bash
+cd frontend && npm run build && npx vite preview --port 4173 &   # front
+python docs/pruebas/ui/api-simulada.py &                         # API simulada en :8080
+cd docs/pruebas/ui && npm i playwright-core --no-save && node responsive.cjs
+```

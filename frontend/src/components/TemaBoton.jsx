@@ -10,7 +10,7 @@ export default function TemaBoton({ className = '' }) {
       onClick={alternar}
       aria-label={oscuro ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
       title={oscuro ? 'Tema claro' : 'Tema oscuro'}
-      className={`grid h-9 w-9 place-items-center rounded-lg transition ${className}`}
+      className={`grid h-10 w-10 place-items-center rounded-full transition ${className}`}
     >
       {oscuro ? (
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
