@@ -1,0 +1,13 @@
+name: solo-qa-a-main
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  verificar-origen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Solo se permite qa -> main
+        run: |
+          if [ "${{ github.head_ref }}" != "qa" ]; then
+            echo "Los PR a main deben venir de qa"; exit 1
+          fi
