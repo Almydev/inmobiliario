@@ -1,0 +1,7 @@
+package co.inmobiliaria360.repository;
+
+import co.inmobiliaria360.domain.CuentaCobro;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CuentaCobroRepository extends JpaRepository<CuentaCobro, Long> {
+}
