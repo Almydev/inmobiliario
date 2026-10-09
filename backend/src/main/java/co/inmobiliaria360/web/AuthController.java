@@ -3,6 +3,7 @@ package co.inmobiliaria360.web;
 import co.inmobiliaria360.domain.Usuario;
 import co.inmobiliaria360.repository.UsuarioRepository;
 import co.inmobiliaria360.security.JwtService;
+import co.inmobiliaria360.security.LoginThrottle;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
@@ -32,20 +33,29 @@ public class AuthController {
     private final UsuarioRepository usuarios;
     private final PasswordEncoder encoder;
     private final JwtService jwt;
+    private final LoginThrottle throttle;
 
-    public AuthController(UsuarioRepository usuarios, PasswordEncoder encoder, JwtService jwt) {
+    public AuthController(UsuarioRepository usuarios, PasswordEncoder encoder, JwtService jwt, LoginThrottle throttle) {
         this.usuarios = usuarios;
         this.encoder = encoder;
         this.jwt = jwt;
+        this.throttle = throttle;
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
-        Usuario u = usuarios.findByEmail(req.email().trim().toLowerCase()).orElse(null);
+        String email = req.email().trim().toLowerCase();
+        if (throttle.bloqueado(email)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(new Error("Demasiados intentos. Espera unos minutos e inténtalo de nuevo."));
+        }
+        Usuario u = usuarios.findByEmail(email).orElse(null);
         // Mismo mensaje para usuario inexistente, inactivo o clave incorrecta
         if (u == null || !u.isActivo() || !encoder.matches(req.password(), u.getPasswordHash())) {
+            throttle.fallo(email);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Error("Credenciales invalidas"));
         }
+        throttle.exito(email);
         return ResponseEntity.ok(new LoginResponse(jwt.generar(u), jwt.segundosValidez(), UsuarioDto.de(u)));
     }
 

@@ -29,3 +29,19 @@ export async function api(path, { method = 'GET', body } = {}) {
   if (!res.ok) throw new ApiError(res.status, data?.mensaje ?? 'Ocurrió un error')
   return data
 }
+
+/** Descarga un archivo (p. ej. un PDF) enviando el token, y lo devuelve como Blob. */
+export async function apiBlob(path) {
+  const t = token.get()
+  let res
+  try {
+    res = await fetch(`${BASE}${path}`, { headers: t ? { Authorization: `Bearer ${t}` } : {} })
+  } catch {
+    throw new ApiError(0, 'No se pudo conectar con el servidor')
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => null)
+    throw new ApiError(res.status, data?.mensaje ?? 'No se pudo descargar el archivo')
+  }
+  return res.blob()
+}
