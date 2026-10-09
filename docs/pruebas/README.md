@@ -13,6 +13,7 @@ cd backend
 | `PdfServiceTest` | El PDF es válido, contiene los datos correctos, soporta caracteres especiales y **rendimiento**: 300 PDF en paralelo. |
 | `MailServiceTest` | Envío SMTP real contra un servidor en memoria (GreenMail): destinatario, asunto y PDF adjunto. Nunca sale un correo real. |
 | `LoginThrottleTest` | Bloqueo por fuerza bruta: 5 fallos, expiración y reinicio. |
+| `ComprobanteEgresoServiceTest` | Cálculo del egreso con el ejemplo real del Excel (3.500.000 x 15 días, 10 % = 1.575.000), redondeo, descuentos, duplicados, pago al banco y PDF. |
 | `SeguridadApiTest` | **Seguridad**: sin token, token manipulado/expirado/`alg:none`/firmado con otra clave, roles, validación de entradas (inyección en periodo, tope de lote), CORS, usuario inactivo, cabeceras, mensajes que no revelan si el usuario existe. |
 | `JwtServiceTest` | Emisión y validación del token. |
 

@@ -1,6 +1,7 @@
 package co.inmobiliaria360.service;
 
 import co.inmobiliaria360.config.EmpresaProps;
+import co.inmobiliaria360.domain.ComprobanteEgreso;
 import co.inmobiliaria360.domain.CuentaCobro;
 import co.inmobiliaria360.util.NumeroALetras;
 import com.lowagie.text.Document;
@@ -92,6 +93,58 @@ public class PdfService {
             return out.toByteArray();
         } catch (DocumentException | IOException e) {
             throw new IllegalStateException("No se pudo generar el PDF", e);
+        }
+    }
+
+    public byte[] comprobanteEgreso(ComprobanteEgreso e) {
+        try (var out = new ByteArrayOutputStream()) {
+            Document doc = new Document(PageSize.A4, 42, 42, 36, 36);
+            PdfWriter.getInstance(doc, out);
+            doc.open();
+
+            encabezado(doc, "COMPROBANTE DE EGRESO", e.getConsecutivo(), e.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            doc.add(espacio(10));
+
+            PdfPTable beneficiario = tabla();
+            fila(beneficiario, "Beneficiario:", e.getPropietario().getNombre());
+            fila(beneficiario, "Cédula o NIT:", e.getPropietario().getDocumento());
+            fila(beneficiario, "Inmueble:", e.getInmueble().getDescripcion() + " - " + e.getInmueble().getDireccion());
+            doc.add(beneficiario);
+            doc.add(espacio(14));
+
+            PdfPTable detalle = new PdfPTable(new float[] {4, 1.4f});
+            detalle.setWidthPercentage(100);
+            encabezadoTabla(detalle, "CONCEPTO");
+            encabezadoTabla(detalle, "VALOR");
+            linea(detalle, e.getConcepto(), e.getValorBruto(), false);
+            linea(detalle, "Valor de administración", e.getValorAdministracion().negate(), false);
+            if (e.getOtrosDescuentos().signum() != 0) linea(detalle, "Otros descuentos", e.getOtrosDescuentos().negate(), false);
+            linea(detalle, "Total pagado", e.getTotalPagado(), true);
+            doc.add(detalle);
+            doc.add(espacio(14));
+
+            PdfPTable letras = tabla();
+            fila(letras, "Son:", NumeroALetras.pesos(e.getTotalPagado()));
+            fila(letras, "Imputación contable:", e.getImputacionContable());
+            doc.add(letras);
+            doc.add(espacio(40));
+
+            PdfPTable firmas = new PdfPTable(2);
+            firmas.setWidthPercentage(100);
+            for (String etiqueta : new String[] {"Elaboró", "Recibí conforme"}) {
+                PdfPCell c = new PdfPCell(new Phrase(etiqueta, PEQUENA));
+                c.setBorder(Rectangle.TOP);
+                c.setBorderColor(Color.GRAY);
+                c.setHorizontalAlignment(Element.ALIGN_CENTER);
+                c.setPaddingTop(4);
+                firmas.addCell(c);
+            }
+            doc.add(firmas);
+
+            doc.close();
+            return out.toByteArray();
+        } catch (DocumentException | IOException ex) {
+            throw new IllegalStateException("No se pudo generar el PDF", ex);
         }
     }
 

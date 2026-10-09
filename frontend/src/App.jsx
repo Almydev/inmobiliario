@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth'
 import Layout from './components/Layout'
+import ComprobantesEgreso from './pages/ComprobantesEgreso'
 import CuentasCobro from './pages/CuentasCobro'
 import Inicio from './pages/Inicio'
 import Inmuebles from './pages/Inmuebles'
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="/inquilinos" element={<Inquilinos />} />
             <Route path="/inmuebles" element={<Inmuebles />} />
             <Route path="/cuentas-cobro" element={<CuentasCobro />} />
+            <Route path="/comprobantes-egreso" element={<ComprobantesEgreso />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

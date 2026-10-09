@@ -12,6 +12,8 @@ public class ComprobanteEgreso {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     private Long consecutivo;
     private LocalDate fecha;
+    /** Formato yyyy-MM */
+    private String periodo;
     @ManyToOne(optional = false, fetch = FetchType.LAZY) private Propietario propietario;
     @ManyToOne(optional = false, fetch = FetchType.LAZY) private Inmueble inmueble;
     private String concepto;
