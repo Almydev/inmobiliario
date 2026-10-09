@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth'
 import Layout from './components/Layout'
 import ComprobantesEgreso from './pages/ComprobantesEgreso'
+import CuadreBanco from './pages/CuadreBanco'
 import CuentasCobro from './pages/CuentasCobro'
 import Inicio from './pages/Inicio'
 import Inmuebles from './pages/Inmuebles'
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/inmuebles" element={<Inmuebles />} />
             <Route path="/cuentas-cobro" element={<CuentasCobro />} />
             <Route path="/comprobantes-egreso" element={<ComprobantesEgreso />} />
+            <Route path="/banco" element={<CuadreBanco />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

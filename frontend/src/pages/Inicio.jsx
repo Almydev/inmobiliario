@@ -7,6 +7,7 @@ const ACCESOS = [
   { a: '/inmuebles', titulo: 'Inmuebles', texto: 'Une propietario, inquilino y canon de cada inmueble.' },
   { a: '/cuentas-cobro', titulo: 'Cuentas de cobro', texto: 'Genera, revisa y envía las cuentas del mes.' },
   { a: '/comprobantes-egreso', titulo: 'Comprobantes de egreso', texto: 'Paga a los propietarios y envía el comprobante.' },
+  { a: '/banco', titulo: 'Cuadre de banco', texto: 'Ingresos, gastos y saldo del mes, con descarga en CSV.' },
 ]
 
 export default function Inicio() {

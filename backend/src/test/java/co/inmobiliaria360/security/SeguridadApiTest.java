@@ -16,10 +16,12 @@ import co.inmobiliaria360.domain.Usuario;
 import co.inmobiliaria360.repository.ComprobanteEgresoRepository;
 import co.inmobiliaria360.repository.CuentaCobroRepository;
 import co.inmobiliaria360.repository.UsuarioRepository;
+import co.inmobiliaria360.service.BancoService;
 import co.inmobiliaria360.service.ComprobanteEgresoService;
 import co.inmobiliaria360.service.CuentaCobroService;
 import co.inmobiliaria360.web.ApiExceptionHandler;
 import co.inmobiliaria360.web.AuthController;
+import co.inmobiliaria360.web.BancoController;
 import co.inmobiliaria360.web.ComprobanteEgresoController;
 import co.inmobiliaria360.web.CuentaCobroController;
 import co.inmobiliaria360.web.UsuarioController;
@@ -48,7 +50,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Pruebas de seguridad de la API: autenticacion, autorizacion, tokens manipulados, validacion de entradas, CORS y fuerza bruta. */
-@WebMvcTest(controllers = {AuthController.class, UsuarioController.class, CuentaCobroController.class, ComprobanteEgresoController.class})
+@WebMvcTest(controllers = {AuthController.class, UsuarioController.class, CuentaCobroController.class, ComprobanteEgresoController.class, BancoController.class})
 @Import({SecurityConfig.class, JwtService.class, LoginThrottle.class, ApiExceptionHandler.class})
 @TestPropertySource(properties = {
         "app.jwt.secret=0123456789abcdef0123456789abcdef",
@@ -64,6 +66,7 @@ class SeguridadApiTest {
     @MockitoBean UsuarioRepository usuarios;
     @MockitoBean CuentaCobroService cuentaService;
     @MockitoBean CuentaCobroRepository cuentaRepo;
+    @MockitoBean BancoService bancoService;
     @MockitoBean ComprobanteEgresoService egresoService;
     @MockitoBean ComprobanteEgresoRepository egresoRepo;
 
@@ -101,6 +104,27 @@ class SeguridadApiTest {
                         .content("{\"inmuebleId\":1,\"periodo\":\"2026-10\",\"otrosDescuentos\":-5}"))
                 .andExpect(status().isBadRequest());
         verify(egresoService, never()).generar(any(), any(), org.mockito.ArgumentMatchers.anyInt(), any(), any(), any());
+    }
+
+    @Test
+    void cuadreDeBancoRequiereTokenYValidaEntradas() throws Exception {
+        mvc.perform(get("/api/banco?periodo=2026-09")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/banco/csv?periodo=2026-09")).andExpect(status().isUnauthorized());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/banco/movimientos/1"))
+                .andExpect(status().isUnauthorized());
+        String auth = bearer(token(Rol.OPERADOR));
+        mvc.perform(get("/api/banco?periodo=2026-13").header("Authorization", auth)).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/banco").header("Authorization", auth)).andExpect(status().isBadRequest());
+        mvc.perform(post("/api/banco/movimientos").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fecha\":\"2026-09-05\",\"concepto\":\"\",\"gasto\":10}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/banco/movimientos").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fecha\":\"2026-09-05\",\"concepto\":\"x\",\"gasto\":-10}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/banco/movimientos").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fecha\":\"2026-09-05\",\"concepto\":\"x\",\"gasto\":99999999999999999}"))
+                .andExpect(status().isBadRequest());
+        verify(bancoService, never()).crearManual(any(), any(), any(), any(), any());
     }
 
     @Test
