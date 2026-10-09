@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from '../api'
 
 const input =
@@ -39,6 +40,17 @@ function Formulario({ titulo, campos, inicial, onGuardar, onCerrar }) {
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)
 
+  useEffect(() => {
+    const previo = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const esc = (e) => e.key === 'Escape' && onCerrar()
+    window.addEventListener('keydown', esc)
+    return () => {
+      document.body.style.overflow = previo
+      window.removeEventListener('keydown', esc)
+    }
+  }, [onCerrar])
+
   async function enviar(e) {
     e.preventDefault()
     setError('')
@@ -51,12 +63,18 @@ function Formulario({ titulo, campos, inicial, onGuardar, onCerrar }) {
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-20 grid place-items-center bg-brand-950/50 p-4 backdrop-blur-sm" onMouseDown={onCerrar}>
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={titulo}
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-950/50 p-4 backdrop-blur-sm sm:items-center"
+      onMouseDown={onCerrar}
+    >
       <form
         onSubmit={enviar}
         onMouseDown={(e) => e.stopPropagation()}
-        className="max-h-[92vh] w-full max-w-xl animate-rise overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl sm:p-8"
+        className="my-auto w-full max-w-xl animate-rise rounded-2xl bg-white p-6 shadow-2xl sm:p-8"
       >
         <h2 className="font-display text-2xl text-brand-900">{titulo}</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -114,7 +132,8 @@ function Formulario({ titulo, campos, inicial, onGuardar, onCerrar }) {
           </button>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -147,6 +166,8 @@ export default function CrudPage({
     const t = setTimeout(cargar, 250)
     return () => clearTimeout(t)
   }, [cargar])
+
+  const cerrar = useCallback(() => setEditando(null), [])
 
   async function guardar(valores) {
     const esNuevo = !editando.id
@@ -239,7 +260,7 @@ export default function CrudPage({
           campos={campos}
           inicial={inicial}
           onGuardar={guardar}
-          onCerrar={() => setEditando(null)}
+          onCerrar={cerrar}
         />
       )}
     </div>
