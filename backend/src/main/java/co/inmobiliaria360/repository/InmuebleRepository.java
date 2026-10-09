@@ -18,4 +18,12 @@ public interface InmuebleRepository extends JpaRepository<Inmueble, Long> {
                or lower(coalesce(t.nombre, '')) like lower(concat('%', :q, '%'))
             order by i.descripcion""")
     List<Inmueble> buscar(@Param("q") String q);
+
+    @Query("""
+            select i from Inmueble i
+            join fetch i.propietario
+            join fetch i.inquilino
+            where i.activo = true
+            order by i.id""")
+    List<Inmueble> activosConInquilino();
 }

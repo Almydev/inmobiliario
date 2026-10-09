@@ -1,0 +1,42 @@
+# Pruebas
+
+## Automáticas (backend)
+
+```bash
+cd backend
+./mvnw test
+```
+
+| Clase | Qué cubre |
+|---|---|
+| `NumeroALetrasTest` | Valor en letras de los PDF (casos borde, redondeo, negativos). |
+| `PdfServiceTest` | El PDF es válido, contiene los datos correctos, soporta caracteres especiales y **rendimiento**: 300 PDF en paralelo. |
+| `MailServiceTest` | Envío SMTP real contra un servidor en memoria (GreenMail): destinatario, asunto y PDF adjunto. Nunca sale un correo real. |
+| `LoginThrottleTest` | Bloqueo por fuerza bruta: 5 fallos, expiración y reinicio. |
+| `SeguridadApiTest` | **Seguridad**: sin token, token manipulado/expirado/`alg:none`/firmado con otra clave, roles, validación de entradas (inyección en periodo, tope de lote), CORS, usuario inactivo, cabeceras, mensajes que no revelan si el usuario existe. |
+| `JwtServiceTest` | Emisión y validación del token. |
+
+## Correo en desarrollo: Mailpit
+
+Mailpit captura los correos en una bandeja local; nadie los recibe.
+
+1. Descarga `mailpit-windows-amd64.zip` desde https://github.com/axllent/mailpit/releases y ejecútalo.
+2. Bandeja: http://localhost:8025. El backend ya apunta a `localhost:1025` por defecto.
+3. Crea un inquilino con **cualquier** correo (por ejemplo `prueba@ejemplo.com`), genera la cuenta de cobro y pulsa **Enviar**. El correo con el PDF aparece en Mailpit.
+
+Para `qa`/producción define `MAIL_HOST`, `MAIL_PORT`, `MAIL_AUTH`, `MAIL_TLS`, `MAIL_USER`, `MAIL_PASSWORD` y `MAIL_FROM`.
+
+## Rendimiento contra un servidor en marcha
+
+```bash
+python docs/pruebas/carga.py --url http://localhost:8080 --email USUARIO --password CLAVE --hilos 20 --peticiones 400
+```
+
+Reporta peticiones por segundo, latencia p50/p95/p99 y errores para: health, listados y generación de PDF.
+Úsalo solo contra local o `qa`. El plan gratuito de Render duerme el servicio: la primera petición puede tardar ~1 minuto.
+
+## Pendiente (siguiente iteración)
+
+- Pruebas de integración contra Postgres real (Testcontainers) para consecutivos concurrentes y la restricción de unicidad por periodo.
+- Análisis de dependencias vulnerables (`./mvnw org.owasp:dependency-check-maven:check`) y revisión OWASP ZAP sobre `qa`.
+- Pruebas de interfaz extremo a extremo (Playwright).

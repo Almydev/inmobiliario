@@ -5,6 +5,7 @@ const ACCESOS = [
   { a: '/propietarios', titulo: 'Propietarios', texto: 'Registra a los dueños y sus datos de pago.' },
   { a: '/inquilinos', titulo: 'Inquilinos', texto: 'Registra a quienes reciben la cuenta de cobro.' },
   { a: '/inmuebles', titulo: 'Inmuebles', texto: 'Une propietario, inquilino y canon de cada inmueble.' },
+  { a: '/cuentas-cobro', titulo: 'Cuentas de cobro', texto: 'Genera, revisa y envía las cuentas del mes.' },
 ]
 
 export default function Inicio() {
