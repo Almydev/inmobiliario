@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
+import TemaBoton from '../components/TemaBoton'
 import { useBloqueo } from '../hooks'
 
 const ANIO = new Date().getFullYear()
@@ -40,13 +41,13 @@ function Ilustracion() {
 function Campo({ id, etiqueta, derecha, ...props }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-brand-900">
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-ink">
         {etiqueta}
       </label>
       <div className="relative">
         <input
           id={id}
-          className="w-full rounded-xl border border-sand-300 bg-white px-4 py-3 text-brand-950 shadow-sm outline-none transition placeholder:text-brand-900/30 focus:border-brand-700 focus:ring-4 focus:ring-brand-700/15"
+          className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink shadow-sm outline-none transition placeholder:text-ink/30 focus:border-ink-soft focus:ring-4 focus:ring-ink-soft/15"
           {...props}
         />
         {derecha}
@@ -86,7 +87,10 @@ export default function Login() {
   }
 
   return (
-    <main className="grid min-h-screen bg-sand-50 lg:grid-cols-[1.05fr_1fr]">
+    <main className="relative grid min-h-screen bg-page lg:grid-cols-[1.05fr_1fr]">
+      <div className="absolute right-4 top-4 z-10">
+        <TemaBoton className="text-ink-soft hover:bg-subtle hover:text-ink" />
+      </div>
       {/* Panel de marca */}
       <section className="relative hidden overflow-hidden bg-brand-950 lg:flex lg:flex-col lg:justify-between lg:p-14">
         <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-brand-700/40 blur-3xl" />
@@ -134,10 +138,10 @@ export default function Login() {
       {/* Formulario */}
       <section className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md animate-rise">
-          <div className="rounded-3xl border border-sand-300/60 bg-white p-8 shadow-[0_20px_60px_-25px_rgba(31,61,74,0.35)] backdrop-blur sm:p-10">
-            <img src="/logo.jpg" alt="Soluciones Inmobiliarias 360" className="mx-auto -mt-2 mb-4 w-56" />
-            <h1 className="font-display text-3xl font-medium text-brand-900">Bienvenido</h1>
-            <p className="mt-1.5 text-sm text-brand-700/80">Ingresa con tu cuenta para gestionar tus arriendos.</p>
+          <div className="rounded-3xl border border-line/60 bg-surface p-8 shadow-[0_20px_60px_-25px_rgba(31,61,74,0.35)] backdrop-blur sm:p-10">
+            <img src="/logo.jpg" alt="Soluciones Inmobiliarias 360" className="mx-auto -mt-2 mb-4 w-56 dark:rounded-xl dark:bg-white dark:p-2" />
+            <h1 className="font-display text-3xl font-medium text-ink">Bienvenido</h1>
+            <p className="mt-1.5 text-sm text-ink-soft/80">Ingresa con tu cuenta para gestionar tus arriendos.</p>
 
             <form onSubmit={enviar} className="mt-8 space-y-5">
               <Campo
@@ -165,7 +169,7 @@ export default function Login() {
                     type="button"
                     onClick={() => setVer((v) => !v)}
                     aria-label={ver ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    className="absolute inset-y-0 right-0 px-4 text-xs font-medium text-brand-700 transition hover:text-brand-950"
+                    className="absolute inset-y-0 right-0 px-4 text-xs font-medium text-ink-soft transition hover:text-ink"
                   >
                     {ver ? 'Ocultar' : 'Mostrar'}
                   </button>
@@ -176,7 +180,7 @@ export default function Login() {
                 <p
                   key={intento}
                   role="alert"
-                  className="animate-shake rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                  className="animate-shake rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300"
                 >
                   {error}
                 </p>
@@ -185,7 +189,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={enviando}
-                className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-brand-900 px-4 py-3.5 font-medium text-sand-50 shadow-lg shadow-brand-900/20 transition hover:bg-brand-800 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/30 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+                className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary px-4 py-3.5 font-medium text-on-primary shadow-lg shadow-brand-900/20 transition hover:bg-primary-hover focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/30 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {enviando && (
                   <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -198,13 +202,13 @@ export default function Login() {
             </form>
 
             {enviando && (
-              <p className="mt-4 text-center text-xs text-brand-700/70">
+              <p className="mt-4 text-center text-xs text-ink-soft/70">
                 Si el servidor estaba inactivo, la primera vez puede tardar hasta un minuto.
               </p>
             )}
           </div>
 
-          <p className="mt-6 text-center text-xs text-brand-700/60">¿Problemas para ingresar? Contacta al administrador.</p>
+          <p className="mt-6 text-center text-xs text-ink-soft/60">¿Problemas para ingresar? Contacta al administrador.</p>
         </div>
       </section>
     </main>

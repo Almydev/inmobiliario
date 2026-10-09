@@ -19,6 +19,8 @@ public interface InmuebleRepository extends JpaRepository<Inmueble, Long> {
             order by i.descripcion""")
     List<Inmueble> buscar(@Param("q") String q);
 
+    long countByActivoTrueAndInquilinoIsNotNull();
+
     @Query("""
             select i from Inmueble i
             join fetch i.propietario

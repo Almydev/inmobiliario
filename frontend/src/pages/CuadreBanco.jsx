@@ -8,10 +8,10 @@ import { claseInput, mesActual, moneda } from '../lib'
 const fecha = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })
 
 function Resumen({ titulo, valor, tono }) {
-  const color = { neutro: 'text-brand-900', bien: 'text-emerald-700', mal: 'text-red-700' }[tono ?? 'neutro']
+  const color = { neutro: 'text-ink', bien: 'text-emerald-700', mal: 'text-red-700' }[tono ?? 'neutro']
   return (
-    <div className="rounded-2xl border border-sand-300/60 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wider text-brand-700/70">{titulo}</p>
+    <div className="rounded-2xl border border-line/60 bg-surface p-4 shadow-sm">
+      <p className="text-xs font-medium uppercase tracking-wider text-ink-soft/70">{titulo}</p>
       <p className={`mt-1 font-display text-2xl tabular-nums ${color}`}>{moneda.format(valor)}</p>
     </div>
   )
@@ -49,7 +49,7 @@ function ModalMovimiento({ periodo, onCerrar, onCreado }) {
 
   return (
     <ModalBase titulo="Movimiento manual" onCerrar={onCerrar} onSubmit={enviar}>
-      <p className="mt-1 text-sm text-brand-700/80">Para lo que no viene de un documento: gravámenes, comisiones, ajustes.</p>
+      <p className="mt-1 text-sm text-ink-soft/80">Para lo que no viene de un documento: gravámenes, comisiones, ajustes.</p>
       <div className="mt-5 space-y-4">
         <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Tipo de movimiento">
           {[['gasto', 'Gasto'], ['ingreso', 'Ingreso']].map(([v, t]) => (
@@ -59,26 +59,26 @@ function ModalMovimiento({ periodo, onCerrar, onCreado }) {
               role="radio"
               aria-checked={tipo === v}
               onClick={() => setTipo(v)}
-              className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition ${tipo === v ? 'border-brand-900 bg-brand-900 text-sand-50' : 'border-sand-300 bg-white text-brand-900 hover:bg-sand-100'}`}
+              className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition ${tipo === v ? 'border-primary bg-primary text-on-primary' : 'border-line bg-surface text-ink hover:bg-subtle'}`}
             >
               {t}
             </button>
           ))}
         </div>
         <div>
-          <label htmlFor="fecha" className="mb-1 block text-sm font-medium text-brand-900">Fecha</label>
+          <label htmlFor="fecha" className="mb-1 block text-sm font-medium text-ink">Fecha</label>
           <input id="fecha" type="date" required value={fechaMov} onChange={(e) => setFechaMov(e.target.value)} className={`${claseInput} w-full`} />
         </div>
         <div>
-          <label htmlFor="concepto" className="mb-1 block text-sm font-medium text-brand-900">Concepto</label>
+          <label htmlFor="concepto" className="mb-1 block text-sm font-medium text-ink">Concepto</label>
           <input id="concepto" required maxLength={400} value={concepto} onChange={(e) => setConcepto(e.target.value)} className={`${claseInput} w-full`} />
         </div>
         <div>
-          <label htmlFor="valor" className="mb-1 block text-sm font-medium text-brand-900">Valor (COP)</label>
+          <label htmlFor="valor" className="mb-1 block text-sm font-medium text-ink">Valor (COP)</label>
           <input id="valor" type="number" required min="1" step="any" value={valor} onChange={(e) => setValor(e.target.value)} className={`${claseInput} w-full`} />
         </div>
       </div>
-      {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">{error}</p>}
       <div className="mt-6 flex justify-end gap-3">
         <Boton type="button" variante="suave" onClick={onCerrar}>Cancelar</Boton>
         <Boton type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</Boton>
@@ -145,8 +145,8 @@ export default function CuadreBanco() {
     <div className="mx-auto max-w-6xl animate-rise">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl text-brand-900">Cuadre de banco</h1>
-          <p className="mt-1 text-sm text-brand-700/80">Ingresos, gastos y saldo del mes. Los pagos de cuentas de cobro y egresos aparecen solos.</p>
+          <h1 className="font-display text-3xl text-ink">Cuadre de banco</h1>
+          <p className="mt-1 text-sm text-ink-soft/80">Ingresos, gastos y saldo del mes. Los pagos de cuentas de cobro y egresos aparecen solos.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Boton variante="suave" onClick={descargar} disabled={!datos}>Descargar CSV</Boton>
@@ -158,7 +158,7 @@ export default function CuadreBanco() {
         <input type="month" value={periodo} onChange={(e) => e.target.value && setPeriodo(e.target.value)} aria-label="Mes" className={claseInput} />
       </div>
 
-      {aviso && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{aviso.texto}</p>}
+      {aviso && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">{aviso.texto}</p>}
 
       {datos && (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -170,9 +170,9 @@ export default function CuadreBanco() {
         </div>
       )}
 
-      <div className="mt-4 overflow-x-auto rounded-2xl border border-sand-300/60 bg-white shadow-sm">
+      <div className="mt-4 overflow-x-auto rounded-2xl border border-line/60 bg-surface shadow-sm">
         <table className="w-full text-left text-sm">
-          <thead className="bg-sand-100 text-xs uppercase tracking-wider text-brand-700">
+          <thead className="bg-subtle text-xs uppercase tracking-wider text-ink-soft">
             <tr>
               <th className="px-4 py-3 font-semibold">Fecha</th>
               <th className="px-4 py-3 font-semibold">Concepto</th>
@@ -184,12 +184,12 @@ export default function CuadreBanco() {
             </tr>
           </thead>
           <tbody>
-            {cargando && <tr><td colSpan={7} className="px-4 py-10 text-center text-brand-700/70">Cargando…</td></tr>}
+            {cargando && <tr><td colSpan={7} className="px-4 py-10 text-center text-ink-soft/70">Cargando…</td></tr>}
             {!cargando && datos && datos.movimientos.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-10 text-center text-brand-700/70">No hay movimientos este mes.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-ink-soft/70">No hay movimientos este mes.</td></tr>
             )}
             {!cargando && datos && datos.movimientos.length > 0 && (
-              <tr className="border-t border-sand-100 bg-sand-50/60 text-brand-700">
+              <tr className="border-t border-line/40 bg-page/60 text-ink-soft">
                 <td className="px-4 py-2" />
                 <td className="px-4 py-2 italic" colSpan={4}>Saldo inicial</td>
                 <td className="px-4 py-2 text-right tabular-nums">{moneda.format(datos.saldoInicial)}</td>
@@ -197,19 +197,19 @@ export default function CuadreBanco() {
               </tr>
             )}
             {datos?.movimientos.map((m) => (
-              <tr key={m.id} className="border-t border-sand-100 transition hover:bg-sand-50">
+              <tr key={m.id} className="border-t border-line/40 transition hover:bg-page">
                 <td className="whitespace-nowrap px-4 py-3">{fecha(m.fecha)}</td>
                 <td className="px-4 py-3">
                   {m.concepto}
-                  <span className="block text-xs text-brand-700/60">{m.origen}</span>
+                  <span className="block text-xs text-ink-soft/60">{m.origen}</span>
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums text-brand-700/80">{Number(m.administracion) ? moneda.format(m.administracion) : '—'}</td>
-                <td className="px-4 py-3 text-right tabular-nums text-emerald-700">{Number(m.ingreso) ? moneda.format(m.ingreso) : '—'}</td>
-                <td className="px-4 py-3 text-right tabular-nums text-red-700">{Number(m.gasto) ? moneda.format(m.gasto) : '—'}</td>
+                <td className="px-4 py-3 text-right tabular-nums text-ink-soft/80">{Number(m.administracion) ? moneda.format(m.administracion) : '—'}</td>
+                <td className="px-4 py-3 text-right tabular-nums text-emerald-700 dark:text-emerald-400">{Number(m.ingreso) ? moneda.format(m.ingreso) : '—'}</td>
+                <td className="px-4 py-3 text-right tabular-nums text-red-700 dark:text-red-400">{Number(m.gasto) ? moneda.format(m.gasto) : '—'}</td>
                 <td className={`px-4 py-3 text-right font-medium tabular-nums ${Number(m.saldo) < 0 ? 'text-red-700' : ''}`}>{moneda.format(m.saldo)}</td>
                 <td className="px-4 py-3 text-right">
                   {m.manual && (
-                    <button onClick={() => eliminar(m)} aria-label={`Eliminar ${m.concepto}`} className="text-sm text-red-700/80 transition hover:text-red-800">
+                    <button onClick={() => eliminar(m)} aria-label={`Eliminar ${m.concepto}`} className="text-sm text-red-700/80 transition hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
                       Eliminar
                     </button>
                   )}

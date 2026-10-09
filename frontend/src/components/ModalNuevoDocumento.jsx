@@ -51,28 +51,28 @@ export default function ModalNuevoDocumento({ titulo, base, filtro, etiquetaInmu
     <ModalBase titulo={titulo} onCerrar={onCerrar} onSubmit={enviar}>
       <div className="mt-6 space-y-4">
         <div>
-          <label htmlFor="inmueble" className="mb-1 block text-sm font-medium text-brand-900">Inmueble</label>
+          <label htmlFor="inmueble" className="mb-1 block text-sm font-medium text-ink">Inmueble</label>
           <select id="inmueble" required value={inmuebleId} onChange={(e) => setInmuebleId(e.target.value)} className={`${claseInput} w-full`}>
             <option value="">Seleccionar…</option>
             {inmuebles.map((i) => (
               <option key={i.id} value={i.id}>{etiquetaInmueble(i, moneda)}</option>
             ))}
           </select>
-          {inmuebles.length === 0 && <p className="mt-1 text-xs text-brand-700/70">{ayudaVacio}</p>}
+          {inmuebles.length === 0 && <p className="mt-1 text-xs text-ink-soft/70">{ayudaVacio}</p>}
         </div>
         <div>
-          <label htmlFor="periodo" className="mb-1 block text-sm font-medium text-brand-900">Mes</label>
+          <label htmlFor="periodo" className="mb-1 block text-sm font-medium text-ink">Mes</label>
           <input id="periodo" type="month" required value={periodo} onChange={(e) => setPeriodo(e.target.value)} className={`${claseInput} w-full`} />
         </div>
         {campos.map((c) =>
           c.tipo === 'checkbox' ? (
             <label key={c.nombre} className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={Boolean(valores[c.nombre])} onChange={(e) => setValores({ ...valores, [c.nombre]: e.target.checked })} className="h-4 w-4 accent-brand-900" />
+              <input type="checkbox" checked={Boolean(valores[c.nombre])} onChange={(e) => setValores({ ...valores, [c.nombre]: e.target.checked })} className="h-4 w-4 accent-primary" />
               {c.etiqueta}
             </label>
           ) : (
             <div key={c.nombre}>
-              <label htmlFor={c.nombre} className="mb-1 block text-sm font-medium text-brand-900">{c.etiqueta}</label>
+              <label htmlFor={c.nombre} className="mb-1 block text-sm font-medium text-ink">{c.etiqueta}</label>
               <input
                 id={c.nombre}
                 type={c.tipo}
@@ -83,12 +83,12 @@ export default function ModalNuevoDocumento({ titulo, base, filtro, etiquetaInmu
                 onChange={(e) => setValores({ ...valores, [c.nombre]: e.target.value })}
                 className={`${claseInput} w-full`}
               />
-              {c.ayuda && <p className="mt-1 text-xs text-brand-700/70">{c.ayuda}</p>}
+              {c.ayuda && <p className="mt-1 text-xs text-ink-soft/70">{c.ayuda}</p>}
             </div>
           ),
         )}
       </div>
-      {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">{error}</p>}
       <div className="mt-6 flex justify-end gap-3">
         <Boton type="button" variante="suave" onClick={onCerrar}>Cancelar</Boton>
         <Boton type="submit" disabled={guardando}>{guardando ? 'Generando…' : 'Generar'}</Boton>

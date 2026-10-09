@@ -1,5 +1,46 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Colores semánticos: cambian según el tema. Paleta del logo: petróleo y arena. */
+:root {
+  --page: #faf6f0;
+  --surface: #ffffff;
+  --subtle: #f4ede4;
+  --line: #dcc3a9;
+  --ink: #1f3d4a;
+  --ink-soft: #2c5565;
+  --primary: #1f3d4a;
+  --primary-hover: #264a59;
+  --on-primary: #faf6f0;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --page: #0e1d24;
+  --surface: #16292f;
+  --subtle: #1e3540;
+  --line: #2f4b58;
+  --ink: #f4ede4;
+  --ink-soft: #c2b3a1;
+  --primary: #c9a98a;
+  --primary-hover: #dcc3a9;
+  --on-primary: #142a33;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+}
+
 @theme {
   --color-brand-950: #142a33;
   --color-brand-900: #1f3d4a;
@@ -36,6 +77,8 @@
 }
 
 body {
+  background-color: var(--page);
+  color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }

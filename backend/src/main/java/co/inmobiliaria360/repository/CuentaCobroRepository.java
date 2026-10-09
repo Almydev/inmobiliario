@@ -36,6 +36,26 @@ public interface CuentaCobroRepository extends JpaRepository<CuentaCobro, Long> 
             + "where c.id = :id and c.estado <> co.inmobiliaria360.domain.EstadoDocumento.PAGADO")
     int marcarPagada(@Param("id") Long id, @Param("ahora") LocalDateTime ahora);
 
+    @Query("""
+            select c from CuentaCobro c
+            join fetch c.inmueble i join fetch c.inquilino t
+            where c.estado <> co.inmobiliaria360.domain.EstadoDocumento.PAGADO
+            order by c.periodo, c.consecutivo""")
+    List<CuentaCobro> pendientes();
+
+    /** [estado, cantidad, suma] por estado en el periodo. */
+    @Query("select c.estado, count(c), coalesce(sum(c.total), 0) from CuentaCobro c where c.periodo = :periodo group by c.estado")
+    List<Object[]> resumenPorEstado(@Param("periodo") String periodo);
+
+    long countByPeriodo(String periodo);
+
+    /** Cuentas ya pagadas cuyo propietario aun no tiene comprobante de egreso del mes (listo para pagarle). */
+    @Query("""
+            select count(c), coalesce(sum(c.valorArriendo), 0) from CuentaCobro c
+            where c.periodo = :periodo and c.estado = co.inmobiliaria360.domain.EstadoDocumento.PAGADO
+              and not exists (select 1 from ComprobanteEgreso e where e.inmueble = c.inmueble and e.periodo = c.periodo)""")
+    List<Object[]> pagadasSinEgreso(@Param("periodo") String periodo);
+
     @Query(value = "select nextval('cuenta_cobro_consecutivo')", nativeQuery = true)
     long siguienteConsecutivo();
 
