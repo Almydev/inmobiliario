@@ -1,6 +1,7 @@
 package co.inmobiliaria360.web;
 
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,6 +24,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     ResponseEntity<AuthController.Error> estado(ResponseStatusException ex) {
         return ResponseEntity.status(ex.getStatusCode()).body(new AuthController.Error(ex.getReason()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ResponseEntity<AuthController.Error> conflicto(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new AuthController.Error("Ese registro ya existe o entra en conflicto con otro. Actualiza la pantalla e inténtalo de nuevo."));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

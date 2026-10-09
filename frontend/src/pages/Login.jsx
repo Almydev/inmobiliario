@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
+import { useBloqueo } from '../hooks'
 
 const ANIO = new Date().getFullYear()
 
@@ -63,22 +64,25 @@ export default function Login() {
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [intento, setIntento] = useState(0)
+  const bloquear = useBloqueo()
 
   if (usuario) return <Navigate to="/" replace />
 
-  async function enviar(e) {
+  function enviar(e) {
     e.preventDefault()
-    setError('')
-    setEnviando(true)
-    try {
-      await login(email.trim(), password)
-      navigate('/', { replace: true })
-    } catch (err) {
-      setError(err.status === 401 ? 'Correo o contraseña incorrectos.' : err.message)
-      setIntento((n) => n + 1)
-    } finally {
-      setEnviando(false)
-    }
+    return bloquear(async () => {
+      setError('')
+      setEnviando(true)
+      try {
+        await login(email.trim(), password)
+        navigate('/', { replace: true })
+      } catch (err) {
+        setError(err.status === 401 ? 'Correo o contraseña incorrectos.' : err.message)
+        setIntento((n) => n + 1)
+      } finally {
+        setEnviando(false)
+      }
+    })
   }
 
   return (

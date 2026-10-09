@@ -4,6 +4,7 @@ import co.inmobiliaria360.domain.ComprobanteEgreso;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -25,6 +26,12 @@ public interface ComprobanteEgresoRepository extends JpaRepository<ComprobanteEg
             join fetch e.inmueble i join fetch e.propietario p
             where e.id = :id""")
     Optional<ComprobanteEgreso> detalle(@Param("id") Long id);
+
+    /** Pasa a PAGADO solo si aun no lo esta. Devuelve 0 si otro clic ya lo pago. */
+    @Modifying
+    @Query("update ComprobanteEgreso e set e.estado = co.inmobiliaria360.domain.EstadoDocumento.PAGADO "
+            + "where e.id = :id and e.estado <> co.inmobiliaria360.domain.EstadoDocumento.PAGADO")
+    int marcarPagado(@Param("id") Long id);
 
     @Query(value = "select nextval('comprobante_egreso_consecutivo')", nativeQuery = true)
     long siguienteConsecutivo();

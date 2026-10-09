@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api, apiBlob } from '../api'
+import { useBloqueo } from '../hooks'
 import { claseInput, mesActual, moneda } from '../lib'
 import Boton from './Boton'
 
@@ -26,6 +27,7 @@ export default function DocumentosPage({ cfg }) {
   const [ocupado, setOcupado] = useState(false)
   const [aviso, setAviso] = useState(null) // { tipo: 'ok' | 'error', texto }
   const [modal, setModal] = useState(false)
+  const bloquear = useBloqueo()
 
   const cargar = useCallback(async () => {
     try {
@@ -45,18 +47,20 @@ export default function DocumentosPage({ cfg }) {
 
   const cerrarModal = useCallback(() => setModal(false), [])
 
-  async function accion(fn, exito) {
-    setOcupado(true)
-    setAviso(null)
-    try {
-      const r = await fn()
-      setAviso({ tipo: 'ok', texto: typeof exito === 'function' ? exito(r) : exito })
-      await cargar()
-    } catch (err) {
-      setAviso({ tipo: 'error', texto: err.message })
-    } finally {
-      setOcupado(false)
-    }
+  function accion(fn, exito) {
+    return bloquear(async () => {
+      setOcupado(true)
+      setAviso(null)
+      try {
+        const r = await fn()
+        setAviso({ tipo: 'ok', texto: typeof exito === 'function' ? exito(r) : exito })
+      } catch (err) {
+        setAviso({ tipo: 'error', texto: err.message })
+      } finally {
+        await cargar() // aun con error se refresca: otro clic o pestaña pudo cambiar el estado
+        setOcupado(false)
+      }
+    })
   }
 
   async function verPdf(fila) {
