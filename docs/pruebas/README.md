@@ -16,6 +16,8 @@ cd backend
 | `ComprobanteEgresoServiceTest` | Cálculo del egreso con el ejemplo real del Excel (3.500.000 x 15 días, 10 % = 1.575.000), redondeo, descuentos, duplicados, pago al banco y PDF. |
 | `BancoServiceTest` | Saldo acumulado con los movimientos reales del Excel (saldo final 932.440), saldo inicial arrastrado, movimientos manuales, borrado solo de manuales y CSV a prueba de inyección de fórmulas. |
 | `ConcurrenciaTest` | **Multiples clics**: 20 peticiones simultáneas sobre el mismo documento (H2 en memoria, nunca toca Neon). Un solo pago, un solo correo, un solo documento. Antes del arreglo fallaban las 5. |
+| `CarteraServiceTest` | Mora por antigüedad (al día, 1-30, 31-60, 61-90, +90), agrupación por inquilino, vencimiento día 5 y meses cortos. |
+| `PanelServiceTest` | El panel cuadra con los documentos (recaudo, por cobrar, egresos, propietarios por pagar, banco) contra H2. |
 | `SeguridadApiTest` | **Seguridad**: sin token, token manipulado/expirado/`alg:none`/firmado con otra clave, roles, validación de entradas (inyección en periodo, tope de lote), CORS, usuario inactivo, cabeceras, mensajes que no revelan si el usuario existe. |
 | `JwtServiceTest` | Emisión y validación del token. |
 

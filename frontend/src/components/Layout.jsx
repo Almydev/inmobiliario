@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth'
+import TemaBoton from './TemaBoton'
 
 const ENLACES = [
   { a: '/', texto: 'Inicio', fin: true },
@@ -7,6 +8,7 @@ const ENLACES = [
   { a: '/inquilinos', texto: 'Inquilinos' },
   { a: '/inmuebles', texto: 'Inmuebles' },
   { a: '/cuentas-cobro', texto: 'Cuentas de cobro' },
+  { a: '/cartera', texto: 'Cartera' },
   { a: '/comprobantes-egreso', texto: 'Comprobantes de egreso' },
   { a: '/banco', texto: 'Cuadre de banco' },
 ]
@@ -14,7 +16,7 @@ const ENLACES = [
 export default function Layout() {
   const { usuario, logout } = useAuth()
   return (
-    <div className="min-h-screen bg-sand-50 text-brand-900 lg:grid lg:grid-cols-[16rem_1fr]">
+    <div className="min-h-screen bg-page text-ink lg:grid lg:grid-cols-[16rem_1fr]">
       <aside className="flex flex-col bg-brand-950 text-sand-100 lg:min-h-screen">
         <div className="px-6 py-6">
           <p className="font-display text-xl leading-tight">
@@ -45,6 +47,7 @@ export default function Layout() {
             <p className="truncate font-medium">{usuario.nombre}</p>
             <p className="text-xs text-sand-300/70">{usuario.rol === 'ADMIN' ? 'Administrador' : 'Operador'}</p>
           </div>
+          <TemaBoton className="ml-auto text-sand-300 hover:bg-brand-800 hover:text-white" />
           <button onClick={logout} className="rounded-lg border border-sand-400/40 px-3 py-1.5 text-xs transition hover:bg-brand-800">
             Salir
           </button>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth'
 import Layout from './components/Layout'
+import Cartera from './pages/Cartera'
 import ComprobantesEgreso from './pages/ComprobantesEgreso'
 import CuadreBanco from './pages/CuadreBanco'
 import CuentasCobro from './pages/CuentasCobro'
@@ -12,7 +13,7 @@ import Propietarios from './pages/Propietarios'
 
 function Protegida({ children }) {
   const { usuario, cargando } = useAuth()
-  if (cargando) return <div className="min-h-screen grid place-items-center text-brand-700">Cargando…</div>
+  if (cargando) return <div className="min-h-screen grid place-items-center text-ink-soft">Cargando…</div>
   return usuario ? children : <Navigate to="/login" replace />
 }
 
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/inmuebles" element={<Inmuebles />} />
             <Route path="/cuentas-cobro" element={<CuentasCobro />} />
             <Route path="/comprobantes-egreso" element={<ComprobantesEgreso />} />
+            <Route path="/cartera" element={<Cartera />} />
             <Route path="/banco" element={<CuadreBanco />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

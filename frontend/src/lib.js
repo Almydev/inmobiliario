@@ -3,4 +3,4 @@ export const moneda = new Intl.NumberFormat('es-CO', { style: 'currency', curren
 export const mesActual = () => new Date().toISOString().slice(0, 7)
 
 export const claseInput =
-  'rounded-xl border border-sand-300 bg-white px-3.5 py-2.5 text-brand-950 outline-none transition focus:border-brand-700 focus:ring-4 focus:ring-brand-700/15'
+  'rounded-xl border border-line bg-surface px-3.5 py-2.5 text-ink outline-none transition placeholder:text-ink-soft/50 focus:border-ink-soft focus:ring-4 focus:ring-ink-soft/15'

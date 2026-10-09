@@ -22,8 +22,8 @@ export default function ModalBase({ titulo, onCerrar, onSubmit, children }) {
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-950/50 p-4 backdrop-blur-sm sm:items-center"
       onMouseDown={onCerrar}
     >
-      <form onSubmit={onSubmit} onMouseDown={(e) => e.stopPropagation()} className="my-auto w-full max-w-md animate-rise rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
-        <h2 className="font-display text-2xl text-brand-900">{titulo}</h2>
+      <form onSubmit={onSubmit} onMouseDown={(e) => e.stopPropagation()} className="my-auto w-full max-w-md animate-rise rounded-2xl bg-surface p-6 shadow-2xl sm:p-8">
+        <h2 className="font-display text-2xl text-ink">{titulo}</h2>
         {children}
       </form>
     </div>,

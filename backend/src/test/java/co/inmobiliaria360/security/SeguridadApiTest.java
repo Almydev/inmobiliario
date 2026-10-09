@@ -17,11 +17,14 @@ import co.inmobiliaria360.repository.ComprobanteEgresoRepository;
 import co.inmobiliaria360.repository.CuentaCobroRepository;
 import co.inmobiliaria360.repository.UsuarioRepository;
 import co.inmobiliaria360.service.BancoService;
+import co.inmobiliaria360.service.CarteraService;
+import co.inmobiliaria360.service.PanelService;
 import co.inmobiliaria360.service.ComprobanteEgresoService;
 import co.inmobiliaria360.service.CuentaCobroService;
 import co.inmobiliaria360.web.ApiExceptionHandler;
 import co.inmobiliaria360.web.AuthController;
 import co.inmobiliaria360.web.BancoController;
+import co.inmobiliaria360.web.PanelController;
 import co.inmobiliaria360.web.ComprobanteEgresoController;
 import co.inmobiliaria360.web.CuentaCobroController;
 import co.inmobiliaria360.web.UsuarioController;
@@ -50,7 +53,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Pruebas de seguridad de la API: autenticacion, autorizacion, tokens manipulados, validacion de entradas, CORS y fuerza bruta. */
-@WebMvcTest(controllers = {AuthController.class, UsuarioController.class, CuentaCobroController.class, ComprobanteEgresoController.class, BancoController.class})
+@WebMvcTest(controllers = {AuthController.class, UsuarioController.class, CuentaCobroController.class, ComprobanteEgresoController.class, BancoController.class, PanelController.class})
 @Import({SecurityConfig.class, JwtService.class, LoginThrottle.class, ApiExceptionHandler.class})
 @TestPropertySource(properties = {
         "app.jwt.secret=0123456789abcdef0123456789abcdef",
@@ -67,6 +70,8 @@ class SeguridadApiTest {
     @MockitoBean CuentaCobroService cuentaService;
     @MockitoBean CuentaCobroRepository cuentaRepo;
     @MockitoBean BancoService bancoService;
+    @MockitoBean PanelService panelService;
+    @MockitoBean CarteraService carteraService;
     @MockitoBean ComprobanteEgresoService egresoService;
     @MockitoBean ComprobanteEgresoRepository egresoRepo;
 
@@ -125,6 +130,16 @@ class SeguridadApiTest {
                         .content("{\"fecha\":\"2026-09-05\",\"concepto\":\"x\",\"gasto\":99999999999999999}"))
                 .andExpect(status().isBadRequest());
         verify(bancoService, never()).crearManual(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void panelYCarteraRequierenTokenYValidanElPeriodo() throws Exception {
+        mvc.perform(get("/api/panel")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/cartera")).andExpect(status().isUnauthorized());
+        String auth = bearer(token(Rol.OPERADOR));
+        mvc.perform(get("/api/panel?periodo=2026-99").header("Authorization", auth)).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/panel?periodo=x'%20OR%201=1").header("Authorization", auth)).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/cartera").header("Authorization", auth)).andExpect(status().isOk());
     }
 
     @Test

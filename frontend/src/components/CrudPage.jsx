@@ -4,7 +4,7 @@ import { api } from '../api'
 import { useBloqueo } from '../hooks'
 
 const input =
-  'w-full rounded-xl border border-sand-300 bg-white px-3.5 py-2.5 text-brand-950 outline-none transition focus:border-brand-700 focus:ring-4 focus:ring-brand-700/15'
+  'w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-ink outline-none transition focus:border-ink-soft focus:ring-4 focus:ring-ink-soft/15'
 
 const moneda = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
 
@@ -78,13 +78,13 @@ function Formulario({ titulo, campos, inicial, onGuardar, onCerrar }) {
       <form
         onSubmit={enviar}
         onMouseDown={(e) => e.stopPropagation()}
-        className="my-auto w-full max-w-xl animate-rise rounded-2xl bg-white p-6 shadow-2xl sm:p-8"
+        className="my-auto w-full max-w-xl animate-rise rounded-2xl bg-surface p-6 shadow-2xl sm:p-8"
       >
-        <h2 className="font-display text-2xl text-brand-900">{titulo}</h2>
+        <h2 className="font-display text-2xl text-ink">{titulo}</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {campos.map((c) => (
             <div key={c.nombre} className={c.ancho === 'completo' ? 'sm:col-span-2' : ''}>
-              <label htmlFor={c.nombre} className="mb-1 block text-sm font-medium text-brand-900">
+              <label htmlFor={c.nombre} className="mb-1 block text-sm font-medium text-ink">
                 {c.etiqueta}
                 {c.requerido && <span className="text-red-600"> *</span>}
               </label>
@@ -110,7 +110,7 @@ function Formulario({ titulo, campos, inicial, onGuardar, onCerrar }) {
                 type="checkbox"
                 checked={Boolean(valores.activo)}
                 onChange={(e) => setValores({ ...valores, activo: e.target.checked })}
-                className="h-4 w-4 accent-brand-900"
+                className="h-4 w-4 accent-primary"
               />
               Activo
             </label>
@@ -118,19 +118,19 @@ function Formulario({ titulo, campos, inicial, onGuardar, onCerrar }) {
         </div>
 
         {error && (
-          <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
             {error}
           </p>
         )}
 
         <div className="mt-6 flex justify-end gap-3">
-          <button type="button" onClick={onCerrar} className="rounded-xl border border-sand-300 px-4 py-2.5 text-sm transition hover:bg-sand-100">
+          <button type="button" onClick={onCerrar} className="rounded-xl border border-line px-4 py-2.5 text-sm transition hover:bg-subtle">
             Cancelar
           </button>
           <button
             type="submit"
             disabled={guardando}
-            className="rounded-xl bg-brand-900 px-5 py-2.5 text-sm font-medium text-sand-50 transition hover:bg-brand-800 disabled:opacity-60"
+            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-on-primary transition hover:bg-primary-hover disabled:opacity-60"
           >
             {guardando ? 'Guardando…' : 'Guardar'}
           </button>
@@ -193,12 +193,12 @@ export default function CrudPage({
     <div className="mx-auto max-w-6xl animate-rise">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl text-brand-900">{titulo}</h1>
-          <p className="mt-1 text-sm text-brand-700/80">{descripcion}</p>
+          <h1 className="font-display text-3xl text-ink">{titulo}</h1>
+          <p className="mt-1 text-sm text-ink-soft/80">{descripcion}</p>
         </div>
         <button
           onClick={() => setEditando({})}
-          className="rounded-xl bg-brand-900 px-5 py-2.5 text-sm font-medium text-sand-50 shadow-lg shadow-brand-900/15 transition hover:bg-brand-800"
+          className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-on-primary shadow-lg shadow-primary/15 transition hover:bg-primary-hover"
         >
           + Nuevo {singular}
         </button>
@@ -212,11 +212,11 @@ export default function CrudPage({
         className={`${input} mt-6 max-w-md`}
       />
 
-      {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">{error}</p>}
 
-      <div className="mt-4 overflow-x-auto rounded-2xl border border-sand-300/60 bg-white shadow-sm">
+      <div className="mt-4 overflow-x-auto rounded-2xl border border-line/60 bg-surface shadow-sm">
         <table className="w-full text-left text-sm">
-          <thead className="bg-sand-100 text-xs uppercase tracking-wider text-brand-700">
+          <thead className="bg-subtle text-xs uppercase tracking-wider text-ink-soft">
             <tr>
               {columnas.map((c) => (
                 <th key={c.nombre} className="px-4 py-3 font-semibold">{c.etiqueta}</th>
@@ -227,27 +227,27 @@ export default function CrudPage({
           </thead>
           <tbody>
             {cargando && (
-              <tr><td colSpan={columnas.length + 2} className="px-4 py-10 text-center text-brand-700/70">Cargando…</td></tr>
+              <tr><td colSpan={columnas.length + 2} className="px-4 py-10 text-center text-ink-soft/70">Cargando…</td></tr>
             )}
             {!cargando && filas.length === 0 && (
               <tr>
-                <td colSpan={columnas.length + 2} className="px-4 py-10 text-center text-brand-700/70">
+                <td colSpan={columnas.length + 2} className="px-4 py-10 text-center text-ink-soft/70">
                   {q ? 'Sin resultados para esa búsqueda.' : `Aún no hay registros. Crea el primer ${singular}.`}
                 </td>
               </tr>
             )}
             {filas.map((f) => (
-              <tr key={f.id} className="border-t border-sand-100 transition hover:bg-sand-50">
+              <tr key={f.id} className="border-t border-line/40 transition hover:bg-page">
                 {columnas.map((c) => (
-                  <td key={c.nombre} className="px-4 py-3">{formatear(f[c.nombre], c.formato) ?? <span className="text-brand-700/40">—</span>}</td>
+                  <td key={c.nombre} className="px-4 py-3">{formatear(f[c.nombre], c.formato) ?? <span className="text-ink-soft/40">—</span>}</td>
                 ))}
                 <td className="px-4 py-3">
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${f.activo ? 'bg-emerald-50 text-emerald-700' : 'bg-sand-100 text-brand-700'}`}>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${f.activo ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-subtle text-ink-soft'}`}>
                     {f.activo ? 'Activo' : 'Inactivo'}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => setEditando(f)} className="text-sm font-medium text-brand-700 transition hover:text-brand-950">
+                  <button onClick={() => setEditando(f)} className="text-sm font-medium text-ink-soft transition hover:text-ink">
                     Editar
                   </button>
                 </td>

@@ -12,7 +12,9 @@ import co.inmobiliaria360.repository.MovimientoBancoRepository;
 import co.inmobiliaria360.repository.PropietarioRepository;
 import co.inmobiliaria360.service.BancoService;
 import co.inmobiliaria360.service.ComprobanteEgresoService;
+import co.inmobiliaria360.service.CarteraService;
 import co.inmobiliaria360.service.CuentaCobroService;
+import co.inmobiliaria360.service.PanelService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,12 +52,15 @@ public class DatosDemo implements ApplicationRunner {
     private final CuentaCobroService cuentaService;
     private final ComprobanteEgresoService egresoService;
     private final BancoService bancoService;
+    private final PanelService panelService;
+    private final CarteraService carteraService;
     private final TransactionTemplate tx;
     private final boolean limpiar;
 
     public DatosDemo(PropietarioRepository propietarios, InquilinoRepository inquilinos, InmuebleRepository inmuebles,
                      CuentaCobroRepository cuentas, ComprobanteEgresoRepository egresos, MovimientoBancoRepository movimientos,
                      CuentaCobroService cuentaService, ComprobanteEgresoService egresoService, BancoService bancoService,
+                     PanelService panelService, CarteraService carteraService,
                      TransactionTemplate tx, @org.springframework.beans.factory.annotation.Value("${app.seed.limpiar:false}") boolean limpiar) {
         this.propietarios = propietarios;
         this.inquilinos = inquilinos;
@@ -66,6 +71,8 @@ public class DatosDemo implements ApplicationRunner {
         this.cuentaService = cuentaService;
         this.egresoService = egresoService;
         this.bancoService = bancoService;
+        this.panelService = panelService;
+        this.carteraService = carteraService;
         this.tx = tx;
         this.limpiar = limpiar;
     }
@@ -152,6 +159,13 @@ public class DatosDemo implements ApplicationRunner {
                 x.getValorBruto(), x.getValorAdministracion(), x.getOtrosDescuentos(), x.getTotalPagado(), x.getEstado()));
         log.info("BANCO {} | inicial={} ingresos={} gastos={} admin={} final={} | lineas={}", periodo, c.saldoInicial(),
                 c.totalIngresos(), c.totalGastos(), c.totalAdministracion(), c.saldoFinal(), c.movimientos().size());
+        var p = panelService.panel(periodo);
+        log.info("PANEL cobro={} egresos={} propietariosPorPagar={} ({}) sinCuenta={}", p.cobro(), p.egresos(),
+                p.propietariosPorPagar(), p.valorPropietariosPorPagar(), p.inmueblesSinCuenta());
+        p.alertas().forEach(a -> log.info("PANEL alerta [{}] {}", a.nivel(), a.texto()));
+        var ca = carteraService.calcular();
+        log.info("CARTERA pendiente={} vencido={} cuentas={} enMora={}", ca.totalPendiente(), ca.totalVencido(), ca.cuentasPendientes(), ca.inquilinosEnMora());
+        ca.inquilinos().forEach(i -> log.info("CARTERA {} | pendiente={} | mora={} dias | cuentas={}", i.nombre(), i.totalPendiente(), i.maxDiasMora(), i.cuentas().size()));
         c.movimientos().forEach(l -> log.info("  {} | {} | ing={} gas={} saldo={} | {}", l.fecha(), l.concepto(), l.ingreso(), l.gasto(), l.saldo(), l.origen()));
     }
 

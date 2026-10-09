@@ -33,6 +33,10 @@ public interface ComprobanteEgresoRepository extends JpaRepository<ComprobanteEg
             + "where e.id = :id and e.estado <> co.inmobiliaria360.domain.EstadoDocumento.PAGADO")
     int marcarPagado(@Param("id") Long id);
 
+    /** [estado, cantidad, suma] por estado en el periodo. */
+    @Query("select e.estado, count(e), coalesce(sum(e.totalPagado), 0) from ComprobanteEgreso e where e.periodo = :periodo group by e.estado")
+    List<Object[]> resumenPorEstado(@Param("periodo") String periodo);
+
     @Query(value = "select nextval('comprobante_egreso_consecutivo')", nativeQuery = true)
     long siguienteConsecutivo();
 }

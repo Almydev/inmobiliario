@@ -14,9 +14,9 @@ import Boton from './Boton'
 export default function DocumentosPage({ cfg }) {
   const f = cfg.genero === 'f'
   const ESTADOS = {
-    BORRADOR: { texto: 'Borrador', clase: 'bg-sand-100 text-brand-700' },
-    ENVIADO: { texto: f ? 'Enviada' : 'Enviado', clase: 'bg-sky-50 text-sky-700' },
-    PAGADO: { texto: f ? 'Pagada' : 'Pagado', clase: 'bg-emerald-50 text-emerald-700' },
+    BORRADOR: { texto: 'Borrador', clase: 'bg-subtle text-ink-soft' },
+    ENVIADO: { texto: f ? 'Enviada' : 'Enviado', clase: 'bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
+    PAGADO: { texto: f ? 'Pagada' : 'Pagado', clase: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' },
   }
 
   const [filas, setFilas] = useState([])
@@ -108,8 +108,8 @@ export default function DocumentosPage({ cfg }) {
     <div className="mx-auto max-w-6xl animate-rise">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl text-brand-900">{cfg.titulo}</h1>
-          <p className="mt-1 text-sm text-brand-700/80">{cfg.descripcion}</p>
+          <h1 className="font-display text-3xl text-ink">{cfg.titulo}</h1>
+          <p className="mt-1 text-sm text-ink-soft/80">{cfg.descripcion}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Boton variante="suave" onClick={generarMes} disabled={ocupado}>{cfg.textoGenerarMes}</Boton>
@@ -130,15 +130,15 @@ export default function DocumentosPage({ cfg }) {
       {aviso && (
         <p
           role={aviso.tipo === 'error' ? 'alert' : 'status'}
-          className={`mt-4 rounded-xl border px-4 py-3 text-sm ${aviso.tipo === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-800'}`}
+          className={`mt-4 rounded-xl border px-4 py-3 text-sm ${aviso.tipo === 'error' ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300' : 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'}`}
         >
           {aviso.texto}
         </p>
       )}
 
-      <div className="mt-4 overflow-x-auto rounded-2xl border border-sand-300/60 bg-white shadow-sm">
+      <div className="mt-4 overflow-x-auto rounded-2xl border border-line/60 bg-surface shadow-sm">
         <table className="w-full text-left text-sm">
-          <thead className="bg-sand-100 text-xs uppercase tracking-wider text-brand-700">
+          <thead className="bg-subtle text-xs uppercase tracking-wider text-ink-soft">
             <tr>
               <th className="w-10 px-4 py-3">
                 <input
@@ -146,7 +146,7 @@ export default function DocumentosPage({ cfg }) {
                   aria-label="Seleccionar todos los pendientes"
                   checked={todasMarcadas}
                   onChange={() => setSeleccion(todasMarcadas ? new Set() : new Set(pendientes.map((x) => x.id)))}
-                  className="h-4 w-4 accent-brand-900"
+                  className="h-4 w-4 accent-primary"
                 />
               </th>
               <th className="px-4 py-3 font-semibold">N°</th>
@@ -158,14 +158,14 @@ export default function DocumentosPage({ cfg }) {
             </tr>
           </thead>
           <tbody>
-            {cargando && <tr><td colSpan={7} className="px-4 py-10 text-center text-brand-700/70">Cargando…</td></tr>}
+            {cargando && <tr><td colSpan={7} className="px-4 py-10 text-center text-ink-soft/70">Cargando…</td></tr>}
             {!cargando && filas.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-10 text-center text-brand-700/70">{cfg.textoVacio}</td></tr>
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-ink-soft/70">{cfg.textoVacio}</td></tr>
             )}
             {filas.map((fila) => {
               const est = ESTADOS[fila.estado]
               return (
-                <tr key={fila.id} className="border-t border-sand-100 transition hover:bg-sand-50">
+                <tr key={fila.id} className="border-t border-line/40 transition hover:bg-page">
                   <td className="px-4 py-3">
                     {fila.estado === 'BORRADOR' && (
                       <input
@@ -173,26 +173,26 @@ export default function DocumentosPage({ cfg }) {
                         aria-label={`Seleccionar No. ${fila.consecutivo}`}
                         checked={seleccion.has(fila.id)}
                         onChange={() => alternar(fila.id)}
-                        className="h-4 w-4 accent-brand-900"
+                        className="h-4 w-4 accent-primary"
                       />
                     )}
                   </td>
                   <td className="px-4 py-3 font-medium">{fila.consecutivo}</td>
                   <td className="px-4 py-3">
                     {fila[cfg.persona]}
-                    <span className="block text-xs text-brand-700/70">{fila[cfg.personaEmail] ?? 'Sin correo'}</span>
+                    <span className="block text-xs text-ink-soft/70">{fila[cfg.personaEmail] ?? 'Sin correo'}</span>
                   </td>
                   <td className="px-4 py-3">{fila.inmueble}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{moneda.format(fila.total)}</td>
                   <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${est.clase}`}>{est.texto}</span></td>
                   <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium">
-                    <button onClick={() => verPdf(fila)} className="text-brand-700 transition hover:text-brand-950">PDF</button>
+                    <button onClick={() => verPdf(fila)} className="text-ink-soft transition hover:text-ink">PDF</button>
                     {fila.estado !== 'PAGADO' && (
                       <>
-                        <button onClick={() => enviar(fila)} disabled={ocupado} className="ml-4 text-brand-700 transition hover:text-brand-950 disabled:opacity-50">
+                        <button onClick={() => enviar(fila)} disabled={ocupado} className="ml-4 text-ink-soft transition hover:text-ink disabled:opacity-50">
                           {fila.estado === 'ENVIADO' ? 'Reenviar' : 'Enviar'}
                         </button>
-                        <button onClick={() => pagar(fila)} disabled={ocupado} className="ml-4 text-emerald-700 transition hover:text-emerald-900 disabled:opacity-50">
+                        <button onClick={() => pagar(fila)} disabled={ocupado} className="ml-4 text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300 disabled:opacity-50">
                           Marcar {f ? 'pagada' : 'pagado'}
                         </button>
                       </>
@@ -204,7 +204,7 @@ export default function DocumentosPage({ cfg }) {
           </tbody>
           {filas.length > 0 && (
             <tfoot>
-              <tr className="border-t border-sand-300 bg-sand-50 text-sm font-semibold">
+              <tr className="border-t border-line bg-page text-sm font-semibold">
                 <td colSpan={4} className="px-4 py-3 text-right">Total del listado</td>
                 <td className="px-4 py-3 text-right tabular-nums">{moneda.format(total)}</td>
                 <td colSpan={2} />
