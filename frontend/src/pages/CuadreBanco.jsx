@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { api, apiBlob } from '../api'
 import Boton from '../components/Boton'
 import ModalBase from '../components/ModalBase'
+import { useBloqueo } from '../hooks'
 import { claseInput, mesActual, moneda } from '../lib'
 
 const fecha = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })
@@ -26,21 +27,24 @@ function ModalMovimiento({ periodo, onCerrar, onCreado }) {
   const [valor, setValor] = useState('')
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)
+  const bloquear = useBloqueo()
 
-  async function enviar(e) {
+  function enviar(e) {
     e.preventDefault()
-    setError('')
-    setGuardando(true)
-    try {
-      await api('/api/banco/movimientos', {
-        method: 'POST',
-        body: { fecha: fechaMov, concepto, [tipo]: Number(valor) },
-      })
-      onCreado()
-    } catch (err) {
-      setError(err.message)
-      setGuardando(false)
-    }
+    return bloquear(async () => {
+      setError('')
+      setGuardando(true)
+      try {
+        await api('/api/banco/movimientos', {
+          method: 'POST',
+          body: { fecha: fechaMov, concepto, [tipo]: Number(valor) },
+        })
+        onCreado()
+      } catch (err) {
+        setError(err.message)
+        setGuardando(false)
+      }
+    })
   }
 
   return (
@@ -108,14 +112,19 @@ export default function CuadreBanco() {
 
   const cerrar = useCallback(() => setModal(false), [])
 
-  async function eliminar(m) {
-    if (!window.confirm(`¿Eliminar el movimiento "${m.concepto}"?`)) return
-    try {
-      await api(`/api/banco/movimientos/${m.id}`, { method: 'DELETE' })
-      cargar()
-    } catch (err) {
-      setAviso({ tipo: 'error', texto: err.message })
-    }
+  const bloquearBorrado = useBloqueo()
+
+  function eliminar(m) {
+    if (!window.confirm(`¿Eliminar el movimiento "${m.concepto}"?`)) return undefined
+    return bloquearBorrado(async () => {
+      try {
+        await api(`/api/banco/movimientos/${m.id}`, { method: 'DELETE' })
+      } catch (err) {
+        setAviso({ tipo: 'error', texto: err.message })
+      } finally {
+        cargar()
+      }
+    })
   }
 
   async function descargar() {

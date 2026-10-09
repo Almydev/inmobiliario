@@ -7,6 +7,12 @@ export const token = {
   clear: () => localStorage.removeItem(KEY),
 }
 
+/** Limpia el token y avisa a la app para que lleve al usuario al login. */
+function sesionVencida() {
+  token.clear()
+  window.dispatchEvent(new Event('sesion-vencida'))
+}
+
 export class ApiError extends Error {
   constructor(status, message) {
     super(message)
@@ -26,6 +32,10 @@ export async function api(path, { method = 'GET', body } = {}) {
     throw new ApiError(0, 'No se pudo conectar con el servidor')
   }
   const data = await res.json().catch(() => null)
+  if (res.status === 401 && token.get() && !path.startsWith('/api/auth/login')) {
+    sesionVencida()
+    throw new ApiError(401, 'Tu sesión expiró. Inicia sesión de nuevo.')
+  }
   if (!res.ok) throw new ApiError(res.status, data?.mensaje ?? 'Ocurrió un error')
   return data
 }
@@ -40,6 +50,10 @@ export async function apiBlob(path) {
     throw new ApiError(0, 'No se pudo conectar con el servidor')
   }
   if (!res.ok) {
+    if (res.status === 401) {
+      sesionVencida()
+      throw new ApiError(401, 'Tu sesión expiró. Inicia sesión de nuevo.')
+    }
     const data = await res.json().catch(() => null)
     throw new ApiError(res.status, data?.mensaje ?? 'No se pudo descargar el archivo')
   }

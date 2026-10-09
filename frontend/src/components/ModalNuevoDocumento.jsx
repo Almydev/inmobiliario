@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { claseInput, mesActual, moneda } from '../lib'
+import { useBloqueo } from '../hooks'
 import Boton from './Boton'
 import ModalBase from './ModalBase'
 
@@ -16,6 +17,7 @@ export default function ModalNuevoDocumento({ titulo, base, filtro, etiquetaInmu
   const [valores, setValores] = useState(() => Object.fromEntries(campos.map((c) => [c.nombre, c.inicial ?? ''])))
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)
+  const bloquear = useBloqueo()
 
   useEffect(() => {
     api('/api/inmuebles?q=')
@@ -23,8 +25,12 @@ export default function ModalNuevoDocumento({ titulo, base, filtro, etiquetaInmu
       .catch((e) => setError(e.message))
   }, [filtro])
 
-  async function enviar(e) {
+  function enviar(e) {
     e.preventDefault()
+    return bloquear(guardar)
+  }
+
+  async function guardar() {
     setError('')
     setGuardando(true)
     try {

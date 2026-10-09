@@ -15,6 +15,9 @@ import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 import java.time.format.TextStyle;
 import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +34,7 @@ public class CuentaCobroService {
     private final PdfService pdf;
     private final MailService mail;
     private final EmpresaProps empresa;
+    private final Set<Long> enviando = ConcurrentHashMap.newKeySet();
 
     public CuentaCobroService(CuentaCobroRepository cuentas, InmuebleRepository inmuebles,
                               MovimientoBancoRepository movimientos, PdfService pdf, MailService mail,
@@ -75,7 +79,12 @@ public class CuentaCobroService {
         c.setOtros(otrosValor);
         c.setReteFuente(BigDecimal.ZERO);
         c.setTotal(arriendo.add(admin).add(otrosValor));
-        return cuentas.save(c);
+        try {
+            return cuentas.save(c);
+        } catch (DataIntegrityViolationException e) {
+            // Otro clic u otra pestaña la creó en el mismo instante (índice único inmueble + periodo)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una cuenta de cobro de este inmueble para " + periodo);
+        }
     }
 
     @Transactional
@@ -106,6 +115,17 @@ public class CuentaCobroService {
 
     /** No es transaccional a proposito: no se retiene una conexion de BD mientras se habla con el servidor SMTP. */
     public CuentaCobro enviar(Long id) {
+        if (!enviando.add(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Esta cuenta de cobro ya se está enviando");
+        }
+        try {
+            return enviarSinGuarda(id);
+        } finally {
+            enviando.remove(id);
+        }
+    }
+
+    private CuentaCobro enviarSinGuarda(Long id) {
         CuentaCobro c = obtener(id);
         String para = c.getInquilino().getEmail();
         if (para == null || para.isBlank()) {
@@ -124,12 +144,12 @@ public class CuentaCobroService {
 
     @Transactional
     public CuentaCobro pagar(Long id) {
-        CuentaCobro c = obtener(id);
-        if (c.getEstado() == EstadoDocumento.PAGADO) {
+        // Actualizacion atomica: si dos clics llegan a la vez, solo uno cambia la fila; el otro recibe 409.
+        if (cuentas.marcarPagada(id, LocalDateTime.now()) == 0) {
+            obtener(id); // 404 si no existe
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La cuenta de cobro ya está pagada");
         }
-        c.setEstado(EstadoDocumento.PAGADO);
-        c.setPagadoEn(LocalDateTime.now());
+        CuentaCobro c = obtener(id);
 
         MovimientoBanco m = new MovimientoBanco();
         m.setFecha(LocalDate.now());
@@ -138,7 +158,7 @@ public class CuentaCobroService {
         m.setAdministracion(c.getValorAdministracion());
         m.setCuentaCobro(c);
         movimientos.save(m);
-        return cuentas.save(c);
+        return c;
     }
 
     static YearMonth parsePeriodo(String periodo) {

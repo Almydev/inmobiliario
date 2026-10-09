@@ -4,7 +4,9 @@ import co.inmobiliaria360.domain.CuentaCobro;
 import co.inmobiliaria360.domain.EstadoDocumento;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -27,6 +29,12 @@ public interface CuentaCobroRepository extends JpaRepository<CuentaCobro, Long> 
             join fetch c.inmueble i join fetch c.inquilino t join fetch c.propietario p
             where c.id = :id""")
     Optional<CuentaCobro> detalle(@Param("id") Long id);
+
+    /** Pasa a PAGADO solo si aun no lo esta. Devuelve 0 si otro clic ya la pago (la fila queda bloqueada hasta el commit). */
+    @Modifying
+    @Query("update CuentaCobro c set c.estado = co.inmobiliaria360.domain.EstadoDocumento.PAGADO, c.pagadoEn = :ahora "
+            + "where c.id = :id and c.estado <> co.inmobiliaria360.domain.EstadoDocumento.PAGADO")
+    int marcarPagada(@Param("id") Long id, @Param("ahora") LocalDateTime ahora);
 
     @Query(value = "select nextval('cuenta_cobro_consecutivo')", nativeQuery = true)
     long siguienteConsecutivo();

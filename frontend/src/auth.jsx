@@ -15,6 +15,12 @@ export function AuthProvider({ children }) {
       .finally(() => setCargando(false))
   }, [])
 
+  useEffect(() => {
+    const vencida = () => setUsuario(null)
+    window.addEventListener('sesion-vencida', vencida)
+    return () => window.removeEventListener('sesion-vencida', vencida)
+  }, [])
+
   const login = useCallback(async (email, password) => {
     const data = await api('/api/auth/login', { method: 'POST', body: { email, password } })
     token.set(data.token)

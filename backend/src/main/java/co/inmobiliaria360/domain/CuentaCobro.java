@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity @Table(name = "cuentas_cobro") @Getter @Setter
+@Entity @Table(name = "cuentas_cobro", uniqueConstraints = @UniqueConstraint(columnNames = {"inmueble_id", "periodo"})) @Getter @Setter
 public class CuentaCobro {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     private Long consecutivo;

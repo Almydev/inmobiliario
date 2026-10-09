@@ -123,6 +123,15 @@ class ComprobanteEgresoServiceTest {
         inmueble("3500000", "10");
         ComprobanteEgreso e = servicio.generar(5L, "2026-09", 15, null, null, null);
         when(egresos.detalle(any())).thenReturn(Optional.of(e));
+        // Simula la actualizacion atomica: el primer clic cambia la fila (1), los siguientes ya no (0)
+        var primera = new java.util.concurrent.atomic.AtomicBoolean(true);
+        when(egresos.marcarPagado(any())).thenAnswer(i -> {
+            if (primera.getAndSet(false)) {
+                e.setEstado(EstadoDocumento.PAGADO);
+                return 1;
+            }
+            return 0;
+        });
 
         servicio.pagar(1L);
 

@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +38,7 @@ public class ComprobanteEgresoService {
     private final PdfService pdf;
     private final MailService mail;
     private final EmpresaProps empresa;
+    private final Set<Long> enviando = ConcurrentHashMap.newKeySet();
 
     public ComprobanteEgresoService(ComprobanteEgresoRepository egresos, InmuebleRepository inmuebles,
                                     CuentaCobroRepository cuentas, MovimientoBancoRepository movimientos,
@@ -84,7 +88,12 @@ public class ComprobanteEgresoService {
         e.setOtrosDescuentos(otros);
         e.setTotalPagado(total);
         e.setImputacionContable(imputacionContable == null || imputacionContable.isBlank() ? null : imputacionContable.trim());
-        return egresos.save(e);
+        try {
+            return egresos.save(e);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Ya existe un comprobante de este inmueble para " + periodo + " por " + dias + " días");
+        }
     }
 
     /** Un comprobante (30 dias) por cada cuenta de cobro ya pagada en el periodo que aun no tenga el suyo. */
@@ -116,6 +125,17 @@ public class ComprobanteEgresoService {
 
     /** No es transaccional a proposito: no se retiene una conexion de BD mientras se habla con el servidor SMTP. */
     public ComprobanteEgreso enviar(Long id) {
+        if (!enviando.add(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Este comprobante ya se está enviando");
+        }
+        try {
+            return enviarSinGuarda(id);
+        } finally {
+            enviando.remove(id);
+        }
+    }
+
+    private ComprobanteEgreso enviarSinGuarda(Long id) {
         ComprobanteEgreso e = obtener(id);
         String para = e.getPropietario().getEmail();
         if (para == null || para.isBlank()) {
@@ -135,11 +155,12 @@ public class ComprobanteEgresoService {
 
     @Transactional
     public ComprobanteEgreso pagar(Long id) {
-        ComprobanteEgreso e = obtener(id);
-        if (e.getEstado() == EstadoDocumento.PAGADO) {
+        // Actualizacion atomica: si dos clics llegan a la vez, solo uno cambia la fila; el otro recibe 409.
+        if (egresos.marcarPagado(id) == 0) {
+            obtener(id); // 404 si no existe
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El comprobante de egreso ya está pagado");
         }
-        e.setEstado(EstadoDocumento.PAGADO);
+        ComprobanteEgreso e = obtener(id);
 
         MovimientoBanco m = new MovimientoBanco();
         m.setFecha(LocalDate.now());
@@ -148,7 +169,7 @@ public class ComprobanteEgresoService {
         m.setAdministracion(e.getValorAdministracion());
         m.setComprobanteEgreso(e);
         movimientos.save(m);
-        return egresos.save(e);
+        return e;
     }
 
     static String conceptoPorDefecto(YearMonth ym, int dias, Inmueble i) {

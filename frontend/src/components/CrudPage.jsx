@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { api } from '../api'
+import { useBloqueo } from '../hooks'
 
 const input =
   'w-full rounded-xl border border-sand-300 bg-white px-3.5 py-2.5 text-brand-950 outline-none transition focus:border-brand-700 focus:ring-4 focus:ring-brand-700/15'
@@ -39,6 +40,7 @@ function Formulario({ titulo, campos, inicial, onGuardar, onCerrar }) {
   const [valores, setValores] = useState(inicial)
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)
+  const bloquear = useBloqueo()
 
   useEffect(() => {
     const previo = document.body.style.overflow
@@ -51,16 +53,18 @@ function Formulario({ titulo, campos, inicial, onGuardar, onCerrar }) {
     }
   }, [onCerrar])
 
-  async function enviar(e) {
+  function enviar(e) {
     e.preventDefault()
-    setError('')
-    setGuardando(true)
-    try {
-      await onGuardar(valores)
-    } catch (err) {
-      setError(err.message)
-      setGuardando(false)
-    }
+    return bloquear(async () => {
+      setError('')
+      setGuardando(true)
+      try {
+        await onGuardar(valores)
+      } catch (err) {
+        setError(err.message)
+        setGuardando(false)
+      }
+    })
   }
 
   return createPortal(
