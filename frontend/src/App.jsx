@@ -1,7 +1,10 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth'
+import Layout from './components/Layout'
 import Inicio from './pages/Inicio'
+import Inquilinos from './pages/Inquilinos'
 import Login from './pages/Login'
+import Propietarios from './pages/Propietarios'
 
 function Protegida({ children }) {
   const { usuario, cargando } = useAuth()
@@ -15,7 +18,11 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Protegida><Inicio /></Protegida>} />
+          <Route element={<Protegida><Layout /></Protegida>}>
+            <Route path="/" element={<Inicio />} />
+            <Route path="/propietarios" element={<Propietarios />} />
+            <Route path="/inquilinos" element={<Inquilinos />} />
+          </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
