@@ -18,6 +18,7 @@ cd backend
 | `ConcurrenciaTest` | **Multiples clics**: 20 peticiones simultáneas sobre el mismo documento (H2 en memoria, nunca toca Neon). Un solo pago, un solo correo, un solo documento. Antes del arreglo fallaban las 5. |
 | `CarteraServiceTest` | Mora por antigüedad (al día, 1-30, 31-60, 61-90, +90), agrupación por inquilino, vencimiento día 5 y meses cortos. |
 | `PanelServiceTest` | El panel cuadra con los documentos (recaudo, por cobrar, egresos, propietarios por pagar, banco) contra H2. |
+| `PoliticaPasswordTest` | Contraseña fuerte (10+ caracteres, mayúscula, minúscula, número), sin palabras comunes ni el correo, límite de 72 bytes de BCrypt. |
 | `SeguridadApiTest` | **Seguridad**: sin token, token manipulado/expirado/`alg:none`/firmado con otra clave, roles, validación de entradas (inyección en periodo, tope de lote), CORS, usuario inactivo, cabeceras, mensajes que no revelan si el usuario existe. |
 | `JwtServiceTest` | Emisión y validación del token. |
 

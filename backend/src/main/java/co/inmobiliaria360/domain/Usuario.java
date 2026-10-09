@@ -13,5 +13,6 @@ public class Usuario {
     private String nombre;
     @Enumerated(EnumType.STRING) private Rol rol;
     private boolean activo = true;
+    private boolean debeCambiarPassword;
     private LocalDateTime creadoEn = LocalDateTime.now();
 }
