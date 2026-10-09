@@ -42,6 +42,7 @@ public class AdminInicial implements ApplicationRunner {
         u.setEmail(email.toLowerCase());
         u.setNombre("Administrador");
         u.setRol(Rol.ADMIN);
+        u.setDebeCambiarPassword(true);
         u.setPasswordHash(encoder.encode(password));
         usuarios.save(u);
         log.info("Administrador inicial creado: {}", u.getEmail());

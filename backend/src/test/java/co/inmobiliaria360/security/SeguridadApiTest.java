@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import co.inmobiliaria360.config.RelojConfig;
 import co.inmobiliaria360.domain.Rol;
 import co.inmobiliaria360.domain.Usuario;
 import co.inmobiliaria360.repository.ComprobanteEgresoRepository;
@@ -54,7 +55,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /** Pruebas de seguridad de la API: autenticacion, autorizacion, tokens manipulados, validacion de entradas, CORS y fuerza bruta. */
 @WebMvcTest(controllers = {AuthController.class, UsuarioController.class, CuentaCobroController.class, ComprobanteEgresoController.class, BancoController.class, PanelController.class})
-@Import({SecurityConfig.class, JwtService.class, LoginThrottle.class, ApiExceptionHandler.class})
+@Import({SecurityConfig.class, JwtService.class, LoginThrottle.class, ApiExceptionHandler.class, UsuarioAcceso.class, RelojConfig.class})
 @TestPropertySource(properties = {
         "app.jwt.secret=0123456789abcdef0123456789abcdef",
         "app.cors.origins=https://app.prueba.test"
@@ -75,11 +76,22 @@ class SeguridadApiTest {
     @MockitoBean ComprobanteEgresoService egresoService;
     @MockitoBean ComprobanteEgresoRepository egresoRepo;
 
+    private static final java.util.concurrent.atomic.AtomicInteger SECUENCIA = new java.util.concurrent.atomic.AtomicInteger();
+
+    /** Crea un usuario activo en la BD simulada y devuelve un token suyo. Cada llamada usa un correo nuevo (la cache de acceso es por correo). */
     private String token(Rol rol) {
+        return token(rol, true, false);
+    }
+
+    private String token(Rol rol, boolean activo, boolean debeCambiar) {
         var u = new Usuario();
-        u.setEmail(rol.name().toLowerCase() + "@prueba.test");
+        u.setEmail(rol.name().toLowerCase() + SECUENCIA.incrementAndGet() + "@prueba.test");
         u.setNombre("Prueba");
         u.setRol(rol);
+        u.setActivo(activo);
+        u.setDebeCambiarPassword(debeCambiar);
+        u.setPasswordHash(new BCryptPasswordEncoder().encode("Actual-12345"));
+        when(usuarios.findByEmail(u.getEmail())).thenReturn(Optional.of(u));
         return jwt.generar(u);
     }
 
@@ -140,6 +152,119 @@ class SeguridadApiTest {
         mvc.perform(get("/api/panel?periodo=2026-99").header("Authorization", auth)).andExpect(status().isBadRequest());
         mvc.perform(get("/api/panel?periodo=x'%20OR%201=1").header("Authorization", auth)).andExpect(status().isBadRequest());
         mvc.perform(get("/api/cartera").header("Authorization", auth)).andExpect(status().isOk());
+    }
+
+    // ---------- estado real del usuario (no solo el token) ----------
+
+    @Test
+    void usuarioDadoDeBajaPierdeElAccesoAunConTokenVigente() throws Exception {
+        String t = token(Rol.ADMIN, false, false);
+        mvc.perform(get("/api/cuentas-cobro").header("Authorization", bearer(t))).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/auth/me").header("Authorization", bearer(t))).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void elRolLoDecideLaBaseDeDatosNoElTokenManipulableAlEmitirse() throws Exception {
+        // El token dice ADMIN pero en la BD ya es OPERADOR (se le bajó el rol): debe aplicar el de la BD.
+        var u = new Usuario();
+        u.setEmail("bajado@prueba.test");
+        u.setNombre("X");
+        u.setRol(Rol.ADMIN);
+        String tokenAdmin = jwt.generar(u);
+        u.setRol(Rol.OPERADOR);
+        u.setActivo(true);
+        when(usuarios.findByEmail("bajado@prueba.test")).thenReturn(Optional.of(u));
+        mvc.perform(get("/api/usuarios").header("Authorization", bearer(tokenAdmin))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void conCambioDePasswordPendienteSoloSePuedeUsarMeYPassword() throws Exception {
+        String t = token(Rol.ADMIN, true, true);
+        mvc.perform(get("/api/cuentas-cobro").header("Authorization", bearer(t))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/usuarios").header("Authorization", bearer(t))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/auth/me").header("Authorization", bearer(t)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.debeCambiarPassword").value(true));
+    }
+
+    // ---------- cambio de contrasena ----------
+
+    private org.springframework.test.web.servlet.ResultActions cambiar(String t, String actual, String nueva) throws Exception {
+        return mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/auth/password")
+                .header("Authorization", bearer(t)).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"actual\":\"" + actual + "\",\"nueva\":\"" + nueva + "\"}"));
+    }
+
+    @Test
+    void cambiarPasswordExigeLaActualYUnaNuevaFuerte() throws Exception {
+        String t = token(Rol.OPERADOR, true, true);
+        cambiar(t, "incorrecta", "NuevaClave-2026").andExpect(status().isBadRequest());           // actual incorrecta
+        cambiar(t, "Actual-12345", "Actual-12345").andExpect(status().isBadRequest());            // igual a la actual
+        cambiar(t, "Actual-12345", "corta1A").andExpect(status().isBadRequest());                  // muy corta
+        cambiar(t, "Actual-12345", "todominusculas123").andExpect(status().isBadRequest());        // sin mayuscula
+        cambiar(t, "Actual-12345", "Password-12345").andExpect(status().isBadRequest());           // palabra comun
+        verify(usuarios, never()).save(any());
+    }
+
+    @Test
+    void cambiarPasswordCorrectoGuardaElHashYQuitaLaMarca() throws Exception {
+        String t = token(Rol.OPERADOR, true, true);
+        cambiar(t, "Actual-12345", "NuevaClave-2026").andExpect(status().isNoContent());
+        var cap = org.mockito.ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarios).save(cap.capture());
+        org.junit.jupiter.api.Assertions.assertFalse(cap.getValue().isDebeCambiarPassword());
+        org.junit.jupiter.api.Assertions.assertTrue(new BCryptPasswordEncoder().matches("NuevaClave-2026", cap.getValue().getPasswordHash()));
+    }
+
+    @Test
+    void cambiarPasswordSinTokenSeRechaza() throws Exception {
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/auth/password")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"actual\":\"a\",\"nueva\":\"b\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void adivinarLaPasswordActualSeFrenaConElBloqueo() throws Exception {
+        String t = token(Rol.OPERADOR, true, false);
+        for (int i = 0; i < 5; i++) cambiar(t, "mala" + i, "NuevaClave-2026").andExpect(status().isBadRequest());
+        cambiar(t, "Actual-12345", "NuevaClave-2026").andExpect(status().isTooManyRequests());
+    }
+
+    // ---------- gestion de usuarios ----------
+
+    @Test
+    void elAdminNoPuedeDesactivarseNiQuitarseElRol() throws Exception {
+        var admin = new Usuario();
+        admin.setId(7L);
+        admin.setEmail("yo@prueba.test");
+        admin.setNombre("Yo");
+        admin.setRol(Rol.ADMIN);
+        when(usuarios.findByEmail("yo@prueba.test")).thenReturn(Optional.of(admin));
+        when(usuarios.findById(7L)).thenReturn(Optional.of(admin));
+        String t = jwt.generar(admin);
+
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/usuarios/7")
+                        .header("Authorization", bearer(t)).contentType(MediaType.APPLICATION_JSON).content("{\"activo\":false}"))
+                .andExpect(status().isConflict());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/usuarios/7")
+                        .header("Authorization", bearer(t)).contentType(MediaType.APPLICATION_JSON).content("{\"rol\":\"OPERADOR\"}"))
+                .andExpect(status().isConflict());
+        verify(usuarios, never()).save(any());
+    }
+
+    @Test
+    void crearUsuarioConPasswordDebilSeRechazaYConFuerteQuedaConCambioPendiente() throws Exception {
+        String t = token(Rol.ADMIN);
+        mvc.perform(post("/api/usuarios").header("Authorization", bearer(t)).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"nuevo@prueba.test\",\"nombre\":\"N\",\"rol\":\"OPERADOR\",\"password\":\"12345678\"}"))
+                .andExpect(status().isBadRequest());
+        verify(usuarios, never()).save(any());
+
+        when(usuarios.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
+        mvc.perform(post("/api/usuarios").header("Authorization", bearer(t)).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"nuevo@prueba.test\",\"nombre\":\"N\",\"rol\":\"OPERADOR\",\"password\":\"ClaveInicial-2026\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.debeCambiarPassword").value(true));
     }
 
     @Test

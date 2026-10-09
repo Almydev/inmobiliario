@@ -12,8 +12,13 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -23,7 +28,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http, UsuarioAcceso acceso) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
@@ -32,10 +37,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                 .requestMatchers("/actuator/health", "/error").permitAll()
+                .requestMatchers("/api/auth/me", "/api/auth/password").authenticated()
                 .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
-                .requestMatchers("/api/**").authenticated()
+                .requestMatchers("/api/**").hasAnyRole("ADMIN", "OPERADOR")
                 .anyRequest().denyAll())
-            .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(converter())));
+            .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(converter(acceso))));
         return http.build();
     }
 
@@ -44,13 +50,20 @@ public class SecurityConfig {
         return jwtService.decoder();
     }
 
-    private JwtAuthenticationConverter converter() {
-        JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
-        authorities.setAuthoritiesClaimName("rol");
-        authorities.setAuthorityPrefix("ROLE_");
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(authorities);
-        return converter;
+    /**
+     * El token solo identifica al usuario: el estado real (activo, rol, cambio de contraseña pendiente) se lee de la BD
+     * (con una cache de segundos). Un usuario dado de baja pierde el acceso casi de inmediato, y quien debe cambiar su
+     * contraseña solo puede usar /api/auth/me y /api/auth/password.
+     */
+    private Converter<Jwt, AbstractAuthenticationToken> converter(UsuarioAcceso acceso) {
+        return jwt -> {
+            var u = acceso.activo(jwt.getSubject())
+                    .orElseThrow(() -> new BadCredentialsException("Usuario inexistente o inactivo"));
+            List<GrantedAuthority> permisos = u.isDebeCambiarPassword()
+                    ? List.of(new SimpleGrantedAuthority("CAMBIO_PASSWORD_PENDIENTE"))
+                    : List.of(new SimpleGrantedAuthority("ROLE_" + u.getRol().name()));
+            return new JwtAuthenticationToken(jwt, permisos, u.getEmail());
+        };
     }
 
     @Bean

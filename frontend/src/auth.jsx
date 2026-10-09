@@ -32,7 +32,12 @@ export function AuthProvider({ children }) {
     setUsuario(null)
   }, [])
 
-  const value = useMemo(() => ({ usuario, cargando, login, logout }), [usuario, cargando, login, logout])
+  const passwordCambiada = useCallback(() => setUsuario((u) => (u ? { ...u, debeCambiarPassword: false } : u)), [])
+
+  const value = useMemo(
+    () => ({ usuario, cargando, login, logout, passwordCambiada }),
+    [usuario, cargando, login, logout, passwordCambiada],
+  )
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
