@@ -42,3 +42,15 @@ Reporta peticiones por segundo, latencia p50/p95/p99 y errores para: health, lis
 - Pruebas de integración contra Postgres real (Testcontainers) para consecutivos concurrentes y la restricción de unicidad por periodo.
 - Análisis de dependencias vulnerables (`./mvnw org.owasp:dependency-check-maven:check`) y revisión OWASP ZAP sobre `qa`.
 - Pruebas de interfaz extremo a extremo (Playwright).
+
+## Datos de ejemplo (QA)
+
+`DatosDemo` carga 5 registros por proceso usando los mismos servicios del sistema (consecutivos, cálculos y movimientos de banco reales). Está apagado por defecto.
+
+```bash
+cd backend
+SEED_DEMO=true SERVER_PORT=8099 ./mvnw spring-boot:run          # cargar (idempotente: si ya existen, solo imprime el resumen)
+SEED_DEMO_LIMPIAR=true SERVER_PORT=8099 ./mvnw spring-boot:run  # borrar todo lo demo
+```
+
+Detén el proceso al ver `RESUMEN` / `Datos demo cargados`. Lo demo se identifica por el correo `@ejemplo.test` y el prefijo `[DEMO]` en los movimientos manuales. **No activar en producción.**
