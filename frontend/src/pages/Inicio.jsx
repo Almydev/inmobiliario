@@ -35,7 +35,7 @@ function Tarjeta({ titulo, valor, detalle, tono = 'neutro', enlace }) {
 
 function Bloque({ titulo, accion, children }) {
   return (
-    <section className="rounded-2xl border border-line/60 bg-surface p-5 shadow-sm">
+    <section className="min-w-0 rounded-2xl border border-line/60 bg-surface p-5 shadow-sm">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-display text-lg text-ink">{titulo}</h2>
         {accion}
@@ -174,7 +174,7 @@ export default function Inicio() {
               )}
             </Bloque>
 
-            <div className="lg:col-span-2">
+            <div className="min-w-0 lg:col-span-2">
               <Bloque titulo="Últimos movimientos del banco" accion={<Link to="/banco" className="text-sm font-medium text-ink-soft hover:text-ink">Ver cuadre</Link>}>
                 {datos.ultimosMovimientos.length === 0 ? (
                   <p className="text-sm text-ink-soft/80">Aún no hay movimientos este mes.</p>

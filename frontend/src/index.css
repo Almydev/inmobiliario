@@ -57,10 +57,20 @@
   --animate-shake: shake 0.4s ease-in-out;
   --animate-draw: draw 2.2s ease-out forwards;
   --animate-float: float 7s ease-in-out infinite;
+  --animate-menu: menu 0.14s ease-out both;
+  --animate-drawer: drawer 0.2s ease-out both;
 
   @keyframes rise {
     from { opacity: 0; transform: translateY(14px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes menu {
+    from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes drawer {
+    from { transform: translateX(-100%); }
+    to { transform: none; }
   }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
